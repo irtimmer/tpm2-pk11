@@ -23,6 +23,8 @@
 
 #include <p11-kit/pkcs11.h>
 
+#define SLOT_ID 0x1234
+
 CK_RV C_GetInfo(CK_INFO_PTR pInfo) {
   memset(pInfo, 0, sizeof(CK_INFO));
   pInfo->cryptokiVersion.major = CRYPTOKI_VERSION_MAJOR;
@@ -34,7 +36,10 @@ CK_RV C_GetInfo(CK_INFO_PTR pInfo) {
 }
 
 CK_RV C_GetSlotList(CK_BBOOL tokenPresent, CK_SLOT_ID_PTR pSlotList, CK_ULONG_PTR pusCount) {
-  *pusCount = 0;
+  if (*pusCount)
+    *pSlotList = SLOT_ID;
+
+  *pusCount = 1;
 
   return CKR_OK;
 }
@@ -48,6 +53,26 @@ CK_RV C_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
 }
 
 CK_RV C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo) {
+  strncpy(pInfo->label, "TPM2-PK11",sizeof(pInfo->label));
+  strncpy(pInfo->manufacturerID, TPM2_PK11_MANUFACTURER, sizeof(pInfo->manufacturerID));
+  strncpy(pInfo->model, TPM2_PK11_MODEL, sizeof(pInfo->model));
+  strncpy(pInfo->serialNumber, TPM2_PK11_SERIAL, sizeof(pInfo->serialNumber));
+  strncpy(pInfo->utcTime, "", sizeof(pInfo->utcTime));
+
+  pInfo->flags = CKF_TOKEN_INITIALIZED;
+  pInfo->ulMaxSessionCount = 1;
+  pInfo->ulSessionCount = 0;
+  pInfo->ulMaxRwSessionCount = 1;
+  pInfo->ulRwSessionCount = 0;
+  pInfo->ulMaxPinLen = 64;
+  pInfo->ulMinPinLen = 8;
+  pInfo->ulTotalPublicMemory = 8;
+  pInfo->ulFreePublicMemory = 8;
+  pInfo->ulTotalPrivateMemory = 8;
+  pInfo->ulFreePrivateMemory = 8;
+  pInfo->hardwareVersion.major = 0;
+  pInfo->firmwareVersion.major = 0;
+
   return CKR_OK;
 }
 
