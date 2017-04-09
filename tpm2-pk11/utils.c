@@ -17,9 +17,35 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define TPM2_PK11_MANUFACTURER "Iwan Timmer"
-#define TPM2_PK11_LIBRARY "TPM2-PK11"
-#define TPM2_PK11_MODEL "TPM2"
-#define TPM2_PK11_SERIAL "123456789"
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
 
-#define KEY_PUBLIC_FILE "./keys/key.pub"
+void* map_file(char* filename, size_t* length) {
+  int fd = open(filename, O_RDONLY);
+  if (fd < 0) {
+    *length = 0;
+    return NULL;
+  }
+
+  struct stat s;
+  void *mapped = NULL;
+  int ret = fstat(fd, &s);
+  if (ret < 0) {
+    *length = 0;
+    goto cleanup;
+  }
+
+  *length = s.st_size;
+  mapped = mmap(0, *length, PROT_READ, MAP_PRIVATE, fd, 0);
+  if (mapped == MAP_FAILED) {
+    *length = 0;
+    goto cleanup;
+  }
+
+  cleanup:
+  close(fd);
+  return mapped;
+}

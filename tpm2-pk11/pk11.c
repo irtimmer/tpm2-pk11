@@ -20,9 +20,13 @@
 #include "pk11.h"
 
 #include "sessions.h"
+#include "utils.h"
 
+#include <sys/mman.h>
 #include <string.h>
+#include <stdio.h>
 
+#include <arpa/inet.h>
 #include <p11-kit/pkcs11.h>
 
 #define SLOT_ID 0x1234
@@ -104,6 +108,39 @@ CK_RV C_FindObjectsFinal(CK_SESSION_HANDLE hSession) {
 }
 
 CK_RV C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG usCount) {
+  size_t length;
+  TPM2B_PUBLIC *key = map_file(KEY_PUBLIC_FILE, &length);
+  if (length == 0)
+    return CKR_GENERAL_ERROR;
+
+  TPM2B_PUBLIC_KEY_RSA *rsa_key = &key->t.publicArea.unique.rsa;
+  TPMS_RSA_PARMS *rsa_key_parms = &key->t.publicArea.parameters.rsaDetail;
+  uint32_t exponent = htonl(rsa_key_parms->exponent == 0 ? 65537 : rsa_key_parms->exponent);
+
+  for (int i = 0; i < usCount; i++) {
+    switch (pTemplate[i].type) {
+    case CKA_ID:
+      pTemplate[i].ulValueLen = 8;
+
+      break;
+    case CKA_PUBLIC_EXPONENT:
+      pTemplate[i].ulValueLen = sizeof(uint32_t);
+      if (pTemplate[i].pValue)
+        memcpy(pTemplate[i].pValue, &exponent, sizeof(uint32_t));
+
+      break;
+    case CKA_MODULUS:
+      pTemplate[i].ulValueLen = rsa_key_parms->keyBits / 8;
+      if (pTemplate[i].pValue)
+        memcpy(pTemplate[i].pValue, rsa_key->b.buffer, pTemplate[i].ulValueLen);
+
+      break;
+    default:
+      pTemplate[i].ulValueLen = 0;
+    }
+  }
+
+  munmap(key, length);
   return CKR_OK;
 }
 

@@ -17,9 +17,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define TPM2_PK11_MANUFACTURER "Iwan Timmer"
-#define TPM2_PK11_LIBRARY "TPM2-PK11"
-#define TPM2_PK11_MODEL "TPM2"
-#define TPM2_PK11_SERIAL "123456789"
+#include <stddef.h>
 
-#define KEY_PUBLIC_FILE "./keys/key.pub"
+void* map_file(char* filename, size_t* length);
