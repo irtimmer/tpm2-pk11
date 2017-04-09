@@ -19,6 +19,8 @@
 
 #include "pk11.h"
 
+#include "sessions.h"
+
 #include <string.h>
 
 #include <p11-kit/pkcs11.h>
@@ -45,7 +47,9 @@ CK_RV C_GetSlotList(CK_BBOOL tokenPresent, CK_SLOT_ID_PTR pSlotList, CK_ULONG_PT
 }
 
 CK_RV C_OpenSession(CK_SLOT_ID slotID, CK_FLAGS flags, CK_VOID_PTR pApplication, CK_RV  (*Notify) (CK_SESSION_HANDLE hSession, CK_NOTIFICATION event, CK_VOID_PTR pApplication), CK_SESSION_HANDLE_PTR phSession) {
-  return CKR_OK;
+  *phSession = session_open();
+
+  return *phSession == -1 ? CKR_GENERAL_ERROR : CKR_OK;
 }
 
 CK_RV C_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
@@ -81,10 +85,17 @@ CK_RV C_Finalize(CK_VOID_PTR pReserved) {
 }
 
 CK_RV C_FindObjectsInit(CK_SESSION_HANDLE hSession, CK_ATTRIBUTE_PTR filters, CK_ULONG nfilters) {
+  sessions[hSession].findPosition = 0;
   return CKR_OK;
 }
 
 CK_RV C_FindObjects(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE_PTR phObject, CK_ULONG usMaxObjectCount, CK_ULONG_PTR nfound) {
+  if (usMaxObjectCount == 0 || sessions[hSession].findPosition >= 1)
+    *nfound = 0;
+  else {
+    *nfound = 1;
+    sessions[hSession].findPosition++;
+  }
   return CKR_OK;
 }
 
