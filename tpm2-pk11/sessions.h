@@ -20,9 +20,11 @@
 #define MAX_SESSIONS 1
 
 #include <stdbool.h>
+#include <sapi/tpm20.h>
 
 struct session {
   bool in_use;
+  TSS2_SYS_CONTEXT *context;
   int findPosition;
 };
 
