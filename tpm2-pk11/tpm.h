@@ -17,10 +17,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define TPM2_PK11_MANUFACTURER "Iwan Timmer"
-#define TPM2_PK11_LIBRARY "TPM2-PK11"
-#define TPM2_PK11_MODEL "TPM2"
-#define TPM2_PK11_SERIAL "123456789"
+#include <sapi/tpm20.h>
 
-#define KEY_PUBLIC_FILE "./keys/key.pub"
-#define KEY_HANDLE 0x81010010
+TPM_RC tpm_sign(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned char *hash, unsigned long hashLength, TPMT_SIGNATURE *signature);

@@ -21,6 +21,7 @@
 
 #include "sessions.h"
 #include "utils.h"
+#include "tpm.h"
 
 #include <sys/mman.h>
 #include <string.h>
@@ -149,6 +150,11 @@ CK_RV C_SignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJ
 }
 
 CK_RV C_Sign(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG usDataLen, CK_BYTE_PTR pSignature, CK_ULONG_PTR pusSignatureLen) {
+  TPMT_SIGNATURE signature = {0};
+  tpm_sign(sessions[hSession].context, KEY_HANDLE, pData, usDataLen, &signature);
+  *pusSignatureLen = signature.signature.rsassa.sig.t.size;
+  memcpy(pSignature, signature.signature.rsassa.sig.t.buffer, *pusSignatureLen);
+
   return CKR_OK;
 }
 
