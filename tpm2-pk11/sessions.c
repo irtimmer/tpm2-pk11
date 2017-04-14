@@ -23,12 +23,15 @@
 
 #include <tcti/tcti_socket.h>
 
+#define DEFAULT_HOSTNAME "127.0.0.1"
+#define DEFAULT_PORT 2323
+
 struct session sessions[MAX_SESSIONS] = {0};
 
-static int session_init(struct session* session) {
+static int session_init(struct session* session, struct config *config) {
   TCTI_SOCKET_CONF conf = {
-    .hostname = "127.0.0.1",
-    .port = 2323,
+    .hostname = config->hostname != NULL ? config->hostname : DEFAULT_HOSTNAME,
+    .port = config->port > 0 ? config->port : DEFAULT_PORT,
     .logCallback = NULL,
     .logBufferCallback = NULL,
     .logData = NULL,
@@ -71,11 +74,11 @@ static int session_init(struct session* session) {
   return -1;
 }
 
-int session_open() {
+int session_open(struct config *config) {
   for (int i = 0; i < MAX_SESSIONS; i++) {
     if (!sessions[i].in_use) {
       sessions[i].in_use = true;
-      if (session_init(&sessions[i]) == 0)
+      if (session_init(&sessions[i], config) == 0)
         return i;
     }
   }

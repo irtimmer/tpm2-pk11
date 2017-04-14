@@ -19,6 +19,7 @@
 
 #include "pk11.h"
 
+#include "config.h"
 #include "sessions.h"
 #include "utils.h"
 #include "tpm.h"
@@ -31,6 +32,8 @@
 #include <p11-kit/pkcs11.h>
 
 #define SLOT_ID 0x1234
+
+static struct config pk11_config = {0};
 
 CK_RV C_GetInfo(CK_INFO_PTR pInfo) {
   memset(pInfo, 0, sizeof(CK_INFO));
@@ -52,7 +55,7 @@ CK_RV C_GetSlotList(CK_BBOOL tokenPresent, CK_SLOT_ID_PTR pSlotList, CK_ULONG_PT
 }
 
 CK_RV C_OpenSession(CK_SLOT_ID slotID, CK_FLAGS flags, CK_VOID_PTR pApplication, CK_RV  (*Notify) (CK_SESSION_HANDLE hSession, CK_NOTIFICATION event, CK_VOID_PTR pApplication), CK_SESSION_HANDLE_PTR phSession) {
-  *phSession = session_open();
+  *phSession = session_open(&pk11_config);
 
   return *phSession == -1 ? CKR_GENERAL_ERROR : CKR_OK;
 }
@@ -110,7 +113,7 @@ CK_RV C_FindObjectsFinal(CK_SESSION_HANDLE hSession) {
 
 CK_RV C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG usCount) {
   size_t length;
-  TPM2B_PUBLIC *key = map_file(KEY_PUBLIC_FILE, &length);
+  TPM2B_PUBLIC *key = map_file(pk11_config.key, &length);
   if (length == 0)
     return CKR_GENERAL_ERROR;
 
@@ -151,7 +154,7 @@ CK_RV C_SignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJ
 
 CK_RV C_Sign(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG usDataLen, CK_BYTE_PTR pSignature, CK_ULONG_PTR pusSignatureLen) {
   TPMT_SIGNATURE signature = {0};
-  tpm_sign(sessions[hSession].context, KEY_HANDLE, pData, usDataLen, &signature);
+  tpm_sign(sessions[hSession].context, pk11_config.key_handle, pData, usDataLen, &signature);
   *pusSignatureLen = signature.signature.rsassa.sig.t.size;
   memcpy(pSignature, signature.signature.rsassa.sig.t.buffer, *pusSignatureLen);
 
@@ -159,6 +162,11 @@ CK_RV C_Sign(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG usDataLen, 
 }
 
 CK_RV C_Initialize(CK_VOID_PTR pInitArgs) {
+  char configfile_path[256];
+  snprintf(configfile_path, sizeof(configfile_path), "%s/" TPM2_PK11_CONFIG_DIR "/" TPM2_PK11_CONFIG_FILE, getenv("HOME"));
+  if (config_load(configfile_path, &pk11_config) < 0)
+    return CKR_GENERAL_ERROR;
+
   return CKR_OK;
 }
 

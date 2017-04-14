@@ -17,20 +17,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define MAX_SESSIONS 1
+#pragma once
 
-#include "config.h"
-
-#include <stdbool.h>
-#include <sapi/tpm20.h>
-
-struct session {
-  bool in_use;
-  TSS2_SYS_CONTEXT *context;
-  TPM_HANDLE handle;
-  int findPosition;
+struct config {
+  char* hostname;
+  unsigned int port;
+  char* key;
+  unsigned int key_handle;
 };
 
-struct session sessions[MAX_SESSIONS];
-
-int session_open(struct config *config);
+int config_load(char* filename, struct config *config);
