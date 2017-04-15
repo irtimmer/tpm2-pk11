@@ -157,6 +157,14 @@ CK_RV C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, 
       }
 
       break;
+    case CKA_SIGN:
+      pTemplate[i].ulValueLen = sizeof(CK_BBOOL);
+      if (pTemplate[i].pValue) {
+        CK_BBOOL sign = CK_TRUE;
+        memcpy(pTemplate[i].pValue, &sign, sizeof(CK_BBOOL));
+      }
+
+      break;
     case CKA_PUBLIC_EXPONENT:
       pTemplate[i].ulValueLen = sizeof(uint32_t);
       if (pTemplate[i].pValue)
