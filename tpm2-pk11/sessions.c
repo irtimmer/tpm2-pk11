@@ -74,6 +74,10 @@ static int session_init(struct session* session, struct config *config) {
   return -1;
 }
 
+void session_close(int session) {
+  Tss2_Sys_Finalize(sessions[session].context);
+}
+
 int session_open(struct config *config) {
   for (int i = 0; i < MAX_SESSIONS; i++) {
     if (!sessions[i].in_use) {

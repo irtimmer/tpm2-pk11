@@ -34,3 +34,4 @@ struct session {
 struct session sessions[MAX_SESSIONS];
 
 int session_open(struct config *config);
+void session_close(int session);

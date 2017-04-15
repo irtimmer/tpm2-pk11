@@ -60,6 +60,19 @@ CK_RV C_OpenSession(CK_SLOT_ID slotID, CK_FLAGS flags, CK_VOID_PTR pApplication,
   return *phSession == -1 ? CKR_GENERAL_ERROR : CKR_OK;
 }
 
+CK_RV C_CloseSession(CK_SESSION_HANDLE hSession) {
+  session_close(hSession);
+  return CKR_OK;
+}
+
+CK_RV C_GetSessionInfo(CK_SESSION_HANDLE hSession, CK_SESSION_INFO_PTR pInfo) {
+  pInfo->slotID = 0;
+  pInfo->state = CKS_RO_USER_FUNCTIONS;
+  pInfo->flags = CKF_SERIAL_SESSION;
+  pInfo->ulDeviceError = 0;
+  return CKR_OK;
+}
+
 CK_RV C_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
   return CKR_OK;
 }
@@ -179,6 +192,8 @@ static CK_FUNCTION_LIST function_list = {
   .C_GetSlotInfo = C_GetSlotInfo,
   .C_GetTokenInfo = C_GetTokenInfo,
   .C_OpenSession = C_OpenSession,
+  .C_CloseSession = C_CloseSession,
+  .C_GetSessionInfo = C_GetSessionInfo,
   .C_GetAttributeValue = C_GetAttributeValue,
   .C_FindObjectsInit = C_FindObjectsInit,
   .C_FindObjects = C_FindObjects,
