@@ -80,11 +80,16 @@ CK_RV C_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
 }
 
 CK_RV C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo) {
-  strncpy(pInfo->label, "TPM2-PK11",sizeof(pInfo->label));
-  strncpy(pInfo->manufacturerID, TPM2_PK11_MANUFACTURER, sizeof(pInfo->manufacturerID));
-  strncpy(pInfo->model, TPM2_PK11_MODEL, sizeof(pInfo->model));
-  strncpy(pInfo->serialNumber, TPM2_PK11_SERIAL, sizeof(pInfo->serialNumber));
-  strncpy(pInfo->utcTime, "", sizeof(pInfo->utcTime));
+  memset(pInfo->label, 0x20, sizeof(pInfo->label));
+  memcpy(pInfo->label, TPM2_PK11_LABEL, strlen(TPM2_PK11_LABEL));
+  memset(pInfo->manufacturerID, 0x20, sizeof(pInfo->manufacturerID));
+  memcpy(pInfo->manufacturerID, TPM2_PK11_MANUFACTURER, strlen(TPM2_PK11_MANUFACTURER));
+  memset(pInfo->model, 0x20, sizeof(pInfo->label));
+  memcpy(pInfo->model, TPM2_PK11_MODEL, strlen(TPM2_PK11_MODEL));
+  memset(pInfo->serialNumber, 0x20, sizeof(pInfo->serialNumber));
+  memcpy(pInfo->serialNumber, TPM2_PK11_SERIAL, strlen(TPM2_PK11_SERIAL));
+  memset(pInfo->utcTime, 0x20, sizeof(pInfo->utcTime));
+  memcpy(pInfo->utcTime, "", strlen(""));
 
   pInfo->flags = CKF_TOKEN_INITIALIZED;
   pInfo->ulMaxSessionCount = 1;

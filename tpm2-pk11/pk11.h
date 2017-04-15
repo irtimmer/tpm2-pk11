@@ -20,6 +20,7 @@
 #define TPM2_PK11_CONFIG_DIR ".tpm2"
 #define TPM2_PK11_CONFIG_FILE "config"
 
+#define TPM2_PK11_LABEL ""
 #define TPM2_PK11_MANUFACTURER "Iwan Timmer"
 #define TPM2_PK11_LIBRARY "TPM2-PK11"
 #define TPM2_PK11_MODEL "TPM2"
