@@ -149,6 +149,14 @@ CK_RV C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, 
       pTemplate[i].ulValueLen = 8;
 
       break;
+    case CKA_CLASS:
+      pTemplate[i].ulValueLen = sizeof(CK_OBJECT_CLASS);
+      if (pTemplate[i].pValue) {
+        CK_OBJECT_CLASS object_class = CKO_PRIVATE_KEY;
+        memcpy(pTemplate[i].pValue, &object_class, sizeof(CK_OBJECT_CLASS));
+      }
+
+      break;
     case CKA_PUBLIC_EXPONENT:
       pTemplate[i].ulValueLen = sizeof(uint32_t);
       if (pTemplate[i].pValue)
