@@ -33,6 +33,8 @@
 
 #define SLOT_ID 0x1234
 
+#define get_session(x) sessions[x - 1]
+
 static struct config pk11_config = {0};
 
 CK_RV C_GetInfo(CK_INFO_PTR pInfo) {
@@ -55,7 +57,7 @@ CK_RV C_GetSlotList(CK_BBOOL tokenPresent, CK_SLOT_ID_PTR pSlotList, CK_ULONG_PT
 }
 
 CK_RV C_OpenSession(CK_SLOT_ID slotID, CK_FLAGS flags, CK_VOID_PTR pApplication, CK_RV  (*Notify) (CK_SESSION_HANDLE hSession, CK_NOTIFICATION event, CK_VOID_PTR pApplication), CK_SESSION_HANDLE_PTR phSession) {
-  *phSession = session_open(&pk11_config);
+  *phSession = session_open(&pk11_config) + 1;
 
   return *phSession == -1 ? CKR_GENERAL_ERROR : CKR_OK;
 }
@@ -106,16 +108,16 @@ CK_RV C_Finalize(CK_VOID_PTR pReserved) {
 }
 
 CK_RV C_FindObjectsInit(CK_SESSION_HANDLE hSession, CK_ATTRIBUTE_PTR filters, CK_ULONG nfilters) {
-  sessions[hSession].findPosition = 0;
+  get_session(hSession).findPosition = 0;
   return CKR_OK;
 }
 
 CK_RV C_FindObjects(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE_PTR phObject, CK_ULONG usMaxObjectCount, CK_ULONG_PTR nfound) {
-  if (usMaxObjectCount == 0 || sessions[hSession].findPosition >= 1)
+  if (usMaxObjectCount == 0 || get_session(hSession).findPosition >= 1)
     *nfound = 0;
   else {
     *nfound = 1;
-    sessions[hSession].findPosition++;
+    get_session(hSession).findPosition++;
   }
   return CKR_OK;
 }
@@ -167,7 +169,7 @@ CK_RV C_SignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJ
 
 CK_RV C_Sign(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG usDataLen, CK_BYTE_PTR pSignature, CK_ULONG_PTR pusSignatureLen) {
   TPMT_SIGNATURE signature = {0};
-  tpm_sign(sessions[hSession].context, pk11_config.key_handle, pData, usDataLen, &signature);
+  tpm_sign(get_session(hSession).context, pk11_config.key_handle, pData, usDataLen, &signature);
   *pusSignatureLen = signature.signature.rsassa.sig.t.size;
   memcpy(pSignature, signature.signature.rsassa.sig.t.buffer, *pusSignatureLen);
 
