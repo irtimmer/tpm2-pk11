@@ -41,8 +41,10 @@ CK_RV C_GetInfo(CK_INFO_PTR pInfo) {
   memset(pInfo, 0, sizeof(CK_INFO));
   pInfo->cryptokiVersion.major = CRYPTOKI_VERSION_MAJOR;
   pInfo->cryptokiVersion.minor = CRYPTOKI_VERSION_MINOR;
-  strncpy(pInfo->manufacturerID, TPM2_PK11_MANUFACTURER, sizeof(pInfo->manufacturerID));
-  strncpy(pInfo->libraryDescription, TPM2_PK11_LIBRARY, sizeof(pInfo->libraryDescription));
+  memset(pInfo->manufacturerID, 0x20, sizeof(pInfo->manufacturerID));
+  memcpy(pInfo->manufacturerID, TPM2_PK11_MANUFACTURER, strlen(TPM2_PK11_MANUFACTURER));
+  memset(pInfo->libraryDescription, 0x20, sizeof(pInfo->libraryDescription));
+  memcpy(pInfo->libraryDescription, TPM2_PK11_LIBRARY, strlen(TPM2_PK11_LIBRARY));
 
   return CKR_OK;
 }
