@@ -49,7 +49,7 @@ int config_load(char* filename, struct config *config) {
         config->key = value;
         value = NULL;
       } else if (strcmp(key, "key_handle") == 0) {
-        sscanf("0x%x", &config->key_handle);
+        sscanf(value, "0x%x", &config->key_handle);
       }
     }
     if (key != NULL)
