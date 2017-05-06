@@ -192,11 +192,13 @@ CK_RV C_SignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJ
 
 CK_RV C_Sign(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG usDataLen, CK_BYTE_PTR pSignature, CK_ULONG_PTR pusSignatureLen) {
   TPMT_SIGNATURE signature = {0};
-  tpm_sign(get_session(hSession).context, pk11_config.key_handle, pData, usDataLen, &signature);
-  *pusSignatureLen = signature.signature.rsassa.sig.t.size;
-  memcpy(pSignature, signature.signature.rsassa.sig.t.buffer, *pusSignatureLen);
+  TPM_RC ret = tpm_sign(get_session(hSession).context, pk11_config.key_handle, pData, usDataLen, &signature);
+  if (*pusSignatureLen >= signature.signature.rsassa.sig.t.size && pSignature != NULL)
+    memcpy(pSignature, signature.signature.rsassa.sig.t.buffer, *pusSignatureLen);
 
-  return CKR_OK;
+  *pusSignatureLen = signature.signature.rsassa.sig.t.size;
+
+  return ret == TPM_RC_SUCCESS ? CKR_OK : CKR_GENERAL_ERROR;
 }
 
 CK_RV C_Initialize(CK_VOID_PTR pInitArgs) {
