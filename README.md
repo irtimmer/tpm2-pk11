@@ -10,9 +10,12 @@ NOTICE: Currently only the OpenSSH client is supported
 
 1. Create key's
 ```
-mkdir ~/.tpm2
-tpm2_getpubek -H 0x81010000 -g 0x01 -f ~/.tpm2/ek.pub
-tpm2_getpubak -E 0x81010000 -k 0x81010010 -f ~/.tpm2/key.pub -n ~/.tpm2/key.name
+mkdir ~/.tpm2 && cd ~/.tpm2
+tpm2_createprimary -A e -g 0x000b -G 0x0001 -C po.ctx
+tpm2_create -c po.ctx -g 0x000b -G 0x0001 -o key.pub -O key.priv
+tpm2_load -c po.ctx -u key.pub -r key.priv -n key.name -C obj.ctx
+tpm2_evictcontrol -A o -c obj.ctx -S 0x81010010
+rm key.name *.ctx
 ```
 2. Create configuration file in ~/.tpm2
 ```
