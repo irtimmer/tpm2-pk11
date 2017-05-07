@@ -165,6 +165,14 @@ CK_RV C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, 
       }
 
       break;
+    case CKA_DECRYPT:
+      pTemplate[i].ulValueLen = sizeof(CK_BBOOL);
+      if (pTemplate[i].pValue) {
+        CK_BBOOL sign = CK_TRUE;
+        memcpy(pTemplate[i].pValue, &sign, sizeof(CK_BBOOL));
+      }
+
+      break;
     case CKA_PUBLIC_EXPONENT:
       pTemplate[i].ulValueLen = sizeof(uint32_t);
       if (pTemplate[i].pValue)
@@ -201,6 +209,22 @@ CK_RV C_Sign(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG usDataLen, 
   return ret == TPM_RC_SUCCESS ? CKR_OK : CKR_GENERAL_ERROR;
 }
 
+CK_RV C_DecryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey) {
+  return CKR_OK;
+}
+
+CK_RV C_Decrypt(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncryptedData, CK_ULONG ulEncryptedDataLen, CK_BYTE_PTR pData, CK_ULONG_PTR pulDataLen) {
+  TPM2B_PUBLIC_KEY_RSA message = {0};
+  message.t.size = message.b.size = MAX_RSA_KEY_BYTES;
+  TPM_RC ret = tpm_decrypt(get_session(hSession).context, pk11_config.key_handle, pEncryptedData, ulEncryptedDataLen, &message);
+  if (*pulDataLen >= message.t.size && pData != NULL)
+    memcpy(pData, message.t.buffer, *pulDataLen);
+
+  *pulDataLen = message.t.size;
+
+  return ret == TPM_RC_SUCCESS ? CKR_OK : CKR_GENERAL_ERROR;
+}
+
 CK_RV C_Initialize(CK_VOID_PTR pInitArgs) {
   char configfile_path[256];
   snprintf(configfile_path, sizeof(configfile_path), "%s/" TPM2_PK11_CONFIG_DIR "/" TPM2_PK11_CONFIG_FILE, getenv("HOME"));
@@ -226,7 +250,9 @@ static CK_FUNCTION_LIST function_list = {
   .C_FindObjects = C_FindObjects,
   .C_FindObjectsFinal = C_FindObjectsFinal,
   .C_SignInit = C_SignInit,
-  .C_Sign = C_Sign
+  .C_Sign = C_Sign,
+  .C_DecryptInit = C_DecryptInit,
+  .C_Decrypt = C_Decrypt
 };
 
 CK_RV C_GetFunctionList(CK_FUNCTION_LIST_PTR_PTR ppFunctionList) {

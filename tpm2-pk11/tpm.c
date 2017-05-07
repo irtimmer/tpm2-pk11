@@ -68,3 +68,38 @@ TPM_RC tpm_sign(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned char 
 
   return Tss2_Sys_Sign(context, handle, &sessionsData, &digest, &scheme, &validation, signature, &sessionsDataOut);
 }
+
+TPM_RC tpm_decrypt(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned char *cipherText, unsigned long cipherLength, TPM2B_PUBLIC_KEY_RSA *message) {
+  TPM2B_DATA label;
+  label.t.size = 0;
+
+  TPMS_AUTH_COMMAND sessionData;
+  sessionData.hmac.t.size = 0;
+  *((UINT8 *)((void *)&sessionData.sessionAttributes)) = 0;
+  sessionData.sessionHandle = TPM_RS_PW;
+  sessionData.nonce.t.size = 0;
+
+  TPMS_AUTH_RESPONSE sessionDataOut;
+
+  TPMS_AUTH_COMMAND *sessionDataArray[1];
+  TPMS_AUTH_RESPONSE *sessionDataOutArray[1];
+  sessionDataArray[0] = &sessionData;
+  sessionDataOutArray[0] = &sessionDataOut;
+
+  TSS2_SYS_CMD_AUTHS sessionsData;
+  sessionsData.cmdAuths = &sessionDataArray[0];
+  sessionsData.cmdAuthsCount = 1;
+  
+  TSS2_SYS_RSP_AUTHS sessionsDataOut;
+  sessionsDataOut.rspAuths = &sessionDataOutArray[0];
+  sessionsDataOut.rspAuthsCount = 1;  
+
+  TPMT_RSA_DECRYPT scheme;
+  scheme.scheme = TPM_ALG_RSAES;
+
+  TPM2B_PUBLIC_KEY_RSA cipher;
+  cipher.t.size = cipher.b.size = cipherLength;
+  memcpy(cipher.t.buffer, cipherText, cipherLength);
+
+  return Tss2_Sys_RSA_Decrypt(context, handle, &sessionsData, &cipher, &scheme, &label, message, &sessionsDataOut);
+}
