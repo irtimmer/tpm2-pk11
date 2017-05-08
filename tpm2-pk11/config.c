@@ -45,10 +45,7 @@ int config_load(char* filename, struct config *config) {
         value = NULL;
       } else if (strcmp(key, "port") == 0)
         config->port = atoi(value);
-      else if (strcmp(key, "key") == 0) {
-        config->key = value;
-        value = NULL;
-      } else if (strcmp(key, "key_handle") == 0) {
+      else if (strcmp(key, "key_handle") == 0) {
         sscanf(value, "0x%x", &config->key_handle);
       }
     }

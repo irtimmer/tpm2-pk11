@@ -22,7 +22,6 @@
 struct config {
   char* hostname;
   unsigned int port;
-  char* key;
   unsigned int key_handle;
 };
 

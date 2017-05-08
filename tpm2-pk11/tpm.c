@@ -22,6 +22,23 @@
 const unsigned char oid_sha1[] = {0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2B, 0x0E, 0x03, 0x02, 0x1A, 0x05, 0x00, 0x04, 0x14};
 const unsigned char oid_sha256[] = {0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 0x00, 0x04, 0x20};
 
+TPM_RC tpm_readpublic(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, TPM2B_PUBLIC *public) {
+  TPMS_AUTH_RESPONSE sessionDataOut;
+  TPMS_AUTH_RESPONSE *sessionDataOutArray[1];
+  sessionDataOutArray[0] = &sessionDataOut;
+
+  TPM2B_NAME name = {0};
+  TPM2B_NAME qualifiedName = {0};
+  name.t.size = name.b.size = sizeof(TPMU_NAME);
+  qualifiedName.t.size = qualifiedName.b.size = sizeof(TPMU_NAME);
+
+  TSS2_SYS_RSP_AUTHS sessionsDataOut;
+  sessionsDataOut.rspAuths = &sessionDataOutArray[0];
+  sessionsDataOut.rspAuthsCount = 1;
+
+  return Tss2_Sys_ReadPublic(context, handle, 0, public, &name, &qualifiedName, &sessionsDataOut);
+}
+
 TPM_RC tpm_sign(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned char *hash, unsigned long hashLength, TPMT_SIGNATURE *signature) {
   TPMS_AUTH_COMMAND sessionData;
   sessionData.hmac.t.size = 0;
