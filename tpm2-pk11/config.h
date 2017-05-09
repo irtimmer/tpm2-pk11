@@ -19,7 +19,12 @@
 
 #pragma once
 
+#define TPM_TYPE_DEVICE 0
+#define TPM_TYPE_SOCKET 1
+
 struct config {
+  int type;
+  char* device;
   char* hostname;
   unsigned int port;
   unsigned int key_handle;
