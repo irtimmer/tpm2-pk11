@@ -19,4 +19,5 @@
 
 #include <stddef.h>
 
+void retmem(void* dest, size_t* size, const void* src, size_t n);
 void* map_file(char* filename, size_t* length);

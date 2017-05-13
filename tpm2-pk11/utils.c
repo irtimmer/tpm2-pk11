@@ -22,6 +22,14 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
+
+void retmem(void* dest, size_t* size, const void* src, size_t n) {
+  if (n <= *size)
+    memcpy(dest, src, n);
+
+  *size = n;
+}
 
 void* map_file(char* filename, size_t* length) {
   int fd = open(filename, O_RDONLY);

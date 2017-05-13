@@ -136,7 +136,7 @@ CK_RV C_FindObjectsFinal(CK_SESSION_HANDLE hSession) {
 }
 
 CK_RV C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG usCount) {
-  TPM2B_PUBLIC key = {{ 0, }};
+  TPM2B_PUBLIC key = {0};
   TPM_RC ret = tpm_readpublic(get_session(hSession)->context, pk11_config.key_handle, &key);
   if (ret != TPM_RC_SUCCESS) {
     printf("%x\n", ret);
@@ -145,49 +145,31 @@ CK_RV C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, 
 
   TPM2B_PUBLIC_KEY_RSA *rsa_key = &key.t.publicArea.unique.rsa;
   TPMS_RSA_PARMS *rsa_key_parms = &key.t.publicArea.parameters.rsaDetail;
+
+  CK_OBJECT_CLASS object_class = CKO_PRIVATE_KEY;
+  CK_BBOOL sign = CK_TRUE;
+  CK_BBOOL decrypt = CK_TRUE;
   uint32_t exponent = htonl(rsa_key_parms->exponent == 0 ? 65537 : rsa_key_parms->exponent);
 
   for (int i = 0; i < usCount; i++) {
     switch (pTemplate[i].type) {
     case CKA_ID:
       pTemplate[i].ulValueLen = 8;
-
       break;
     case CKA_CLASS:
-      pTemplate[i].ulValueLen = sizeof(CK_OBJECT_CLASS);
-      if (pTemplate[i].pValue) {
-        CK_OBJECT_CLASS object_class = CKO_PRIVATE_KEY;
-        memcpy(pTemplate[i].pValue, &object_class, sizeof(CK_OBJECT_CLASS));
-      }
-
+      retmem(pTemplate[i].pValue, &pTemplate[i].ulValueLen, &object_class, sizeof(CK_OBJECT_CLASS));
       break;
     case CKA_SIGN:
-      pTemplate[i].ulValueLen = sizeof(CK_BBOOL);
-      if (pTemplate[i].pValue) {
-        CK_BBOOL sign = CK_TRUE;
-        memcpy(pTemplate[i].pValue, &sign, sizeof(CK_BBOOL));
-      }
-
+      retmem(pTemplate[i].pValue, &pTemplate[i].ulValueLen, &sign, sizeof(CK_BBOOL));
       break;
     case CKA_DECRYPT:
-      pTemplate[i].ulValueLen = sizeof(CK_BBOOL);
-      if (pTemplate[i].pValue) {
-        CK_BBOOL sign = CK_TRUE;
-        memcpy(pTemplate[i].pValue, &sign, sizeof(CK_BBOOL));
-      }
-
+      retmem(pTemplate[i].pValue, &pTemplate[i].ulValueLen, &decrypt, sizeof(CK_BBOOL));
       break;
     case CKA_PUBLIC_EXPONENT:
-      pTemplate[i].ulValueLen = sizeof(uint32_t);
-      if (pTemplate[i].pValue)
-        memcpy(pTemplate[i].pValue, &exponent, sizeof(uint32_t));
-
+      retmem(pTemplate[i].pValue, &pTemplate[i].ulValueLen, &exponent, sizeof(uint32_t));
       break;
     case CKA_MODULUS:
-      pTemplate[i].ulValueLen = rsa_key_parms->keyBits / 8;
-      if (pTemplate[i].pValue)
-        memcpy(pTemplate[i].pValue, rsa_key->b.buffer, pTemplate[i].ulValueLen);
-
+      retmem(pTemplate[i].pValue, &pTemplate[i].ulValueLen, rsa_key->b.buffer, rsa_key_parms->keyBits / 8);
       break;
     default:
       pTemplate[i].ulValueLen = 0;
@@ -204,10 +186,7 @@ CK_RV C_SignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJ
 CK_RV C_Sign(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG usDataLen, CK_BYTE_PTR pSignature, CK_ULONG_PTR pusSignatureLen) {
   TPMT_SIGNATURE signature = {0};
   TPM_RC ret = tpm_sign(get_session(hSession)->context, pk11_config.key_handle, pData, usDataLen, &signature);
-  if (*pusSignatureLen >= signature.signature.rsassa.sig.t.size && pSignature != NULL)
-    memcpy(pSignature, signature.signature.rsassa.sig.t.buffer, *pusSignatureLen);
-
-  *pusSignatureLen = signature.signature.rsassa.sig.t.size;
+  retmem(pSignature, pusSignatureLen, signature.signature.rsassa.sig.t.buffer, signature.signature.rsassa.sig.t.size);
 
   return ret == TPM_RC_SUCCESS ? CKR_OK : CKR_GENERAL_ERROR;
 }
@@ -217,13 +196,9 @@ CK_RV C_DecryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_
 }
 
 CK_RV C_Decrypt(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncryptedData, CK_ULONG ulEncryptedDataLen, CK_BYTE_PTR pData, CK_ULONG_PTR pulDataLen) {
-  TPM2B_PUBLIC_KEY_RSA message = {0};
-  message.t.size = message.b.size = MAX_RSA_KEY_BYTES;
+  TPM2B_PUBLIC_KEY_RSA message = { .t.size = MAX_RSA_KEY_BYTES };
   TPM_RC ret = tpm_decrypt(get_session(hSession)->context, pk11_config.key_handle, pEncryptedData, ulEncryptedDataLen, &message);
-  if (*pulDataLen >= message.t.size && pData != NULL)
-    memcpy(pData, message.t.buffer, *pulDataLen);
-
-  *pulDataLen = message.t.size;
+  retmem(pData, pulDataLen, message.t.buffer, message.t.size);
 
   return ret == TPM_RC_SUCCESS ? CKR_OK : CKR_GENERAL_ERROR;
 }
