@@ -28,9 +28,7 @@
 #define DEFAULT_HOSTNAME "127.0.0.1"
 #define DEFAULT_PORT 2323
 
-struct session sessions[MAX_SESSIONS] = {0};
-
-static int session_init(struct session* session, struct config *config) {
+int session_init(struct session* session, struct config *config) {
   size_t size;
   TSS2_RC rc;
   TSS2_TCTI_CONTEXT *tcti_ctx;
@@ -93,17 +91,6 @@ static int session_init(struct session* session, struct config *config) {
   return -1;
 }
 
-void session_close(int session) {
-  Tss2_Sys_Finalize(sessions[session].context);
-}
-
-int session_open(struct config *config) {
-  for (int i = 0; i < MAX_SESSIONS; i++) {
-    if (!sessions[i].in_use) {
-      sessions[i].in_use = true;
-      if (session_init(&sessions[i], config) == 0)
-        return i;
-    }
-  }
-  return -1;
+void session_close(struct session* session) {
+  Tss2_Sys_Finalize(session->context);
 }

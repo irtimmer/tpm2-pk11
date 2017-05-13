@@ -17,8 +17,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define MAX_SESSIONS 1
-
 #include "config.h"
 
 #include <stdbool.h>
@@ -31,7 +29,5 @@ struct session {
   int findPosition;
 };
 
-struct session sessions[MAX_SESSIONS];
-
-int session_open(struct config *config);
-void session_close(int session);
+int session_init(struct session* session, struct config *config);
+void session_close(struct session* session);

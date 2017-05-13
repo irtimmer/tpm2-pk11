@@ -33,7 +33,7 @@
 
 #define SLOT_ID 0x1234
 
-#define get_session(x) sessions[x - 1]
+#define get_session(x) ((struct session*) x)
 
 static struct config pk11_config = {0};
 
@@ -59,13 +59,15 @@ CK_RV C_GetSlotList(CK_BBOOL tokenPresent, CK_SLOT_ID_PTR pSlotList, CK_ULONG_PT
 }
 
 CK_RV C_OpenSession(CK_SLOT_ID slotID, CK_FLAGS flags, CK_VOID_PTR pApplication, CK_RV  (*Notify) (CK_SESSION_HANDLE hSession, CK_NOTIFICATION event, CK_VOID_PTR pApplication), CK_SESSION_HANDLE_PTR phSession) {
-  *phSession = session_open(&pk11_config) + 1;
+  *phSession = (unsigned long) malloc(sizeof(struct session));
+  session_init((struct session*) *phSession, &pk11_config);
 
-  return *phSession == -1 ? CKR_GENERAL_ERROR : CKR_OK;
+  return *phSession == 0 ? CKR_GENERAL_ERROR : CKR_OK;
 }
 
 CK_RV C_CloseSession(CK_SESSION_HANDLE hSession) {
-  session_close(hSession);
+  session_close(get_session(hSession));
+  free(get_session(hSession));
   return CKR_OK;
 }
 
@@ -115,16 +117,16 @@ CK_RV C_Finalize(CK_VOID_PTR pReserved) {
 }
 
 CK_RV C_FindObjectsInit(CK_SESSION_HANDLE hSession, CK_ATTRIBUTE_PTR filters, CK_ULONG nfilters) {
-  get_session(hSession).findPosition = 0;
+  get_session(hSession)->findPosition = 0;
   return CKR_OK;
 }
 
 CK_RV C_FindObjects(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE_PTR phObject, CK_ULONG usMaxObjectCount, CK_ULONG_PTR nfound) {
-  if (usMaxObjectCount == 0 || get_session(hSession).findPosition >= 1)
+  if (usMaxObjectCount == 0 || get_session(hSession)->findPosition >= 1)
     *nfound = 0;
   else {
     *nfound = 1;
-    get_session(hSession).findPosition++;
+    get_session(hSession)->findPosition++;
   }
   return CKR_OK;
 }
@@ -135,7 +137,7 @@ CK_RV C_FindObjectsFinal(CK_SESSION_HANDLE hSession) {
 
 CK_RV C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG usCount) {
   TPM2B_PUBLIC key = {{ 0, }};
-  TPM_RC ret = tpm_readpublic(get_session(hSession).context, pk11_config.key_handle, &key);
+  TPM_RC ret = tpm_readpublic(get_session(hSession)->context, pk11_config.key_handle, &key);
   if (ret != TPM_RC_SUCCESS) {
     printf("%x\n", ret);
     return CKR_GENERAL_ERROR;
@@ -201,7 +203,7 @@ CK_RV C_SignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJ
 
 CK_RV C_Sign(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG usDataLen, CK_BYTE_PTR pSignature, CK_ULONG_PTR pusSignatureLen) {
   TPMT_SIGNATURE signature = {0};
-  TPM_RC ret = tpm_sign(get_session(hSession).context, pk11_config.key_handle, pData, usDataLen, &signature);
+  TPM_RC ret = tpm_sign(get_session(hSession)->context, pk11_config.key_handle, pData, usDataLen, &signature);
   if (*pusSignatureLen >= signature.signature.rsassa.sig.t.size && pSignature != NULL)
     memcpy(pSignature, signature.signature.rsassa.sig.t.buffer, *pusSignatureLen);
 
@@ -217,7 +219,7 @@ CK_RV C_DecryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_
 CK_RV C_Decrypt(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncryptedData, CK_ULONG ulEncryptedDataLen, CK_BYTE_PTR pData, CK_ULONG_PTR pulDataLen) {
   TPM2B_PUBLIC_KEY_RSA message = {0};
   message.t.size = message.b.size = MAX_RSA_KEY_BYTES;
-  TPM_RC ret = tpm_decrypt(get_session(hSession).context, pk11_config.key_handle, pEncryptedData, ulEncryptedDataLen, &message);
+  TPM_RC ret = tpm_decrypt(get_session(hSession)->context, pk11_config.key_handle, pEncryptedData, ulEncryptedDataLen, &message);
   if (*pulDataLen >= message.t.size && pData != NULL)
     memcpy(pData, message.t.buffer, *pulDataLen);
 
