@@ -38,13 +38,11 @@
 static struct config pk11_config = {0};
 
 CK_RV C_GetInfo(CK_INFO_PTR pInfo) {
-  memset(pInfo, 0, sizeof(CK_INFO));
   pInfo->cryptokiVersion.major = CRYPTOKI_VERSION_MAJOR;
   pInfo->cryptokiVersion.minor = CRYPTOKI_VERSION_MINOR;
-  memset(pInfo->manufacturerID, 0x20, sizeof(pInfo->manufacturerID));
-  memcpy(pInfo->manufacturerID, TPM2_PK11_MANUFACTURER, strlen(TPM2_PK11_MANUFACTURER));
-  memset(pInfo->libraryDescription, 0x20, sizeof(pInfo->libraryDescription));
-  memcpy(pInfo->libraryDescription, TPM2_PK11_LIBRARY, strlen(TPM2_PK11_LIBRARY));
+  strncpy_pad(pInfo->manufacturerID, TPM2_PK11_MANUFACTURER, sizeof(pInfo->manufacturerID));
+  strncpy_pad(pInfo->libraryDescription, TPM2_PK11_LIBRARY_DESCRIPTION, sizeof(pInfo->libraryDescription));
+  pInfo->flags = 0;
 
   return CKR_OK;
 }
@@ -84,16 +82,11 @@ CK_RV C_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
 }
 
 CK_RV C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo) {
-  memset(pInfo->label, 0x20, sizeof(pInfo->label));
-  memcpy(pInfo->label, TPM2_PK11_LABEL, strlen(TPM2_PK11_LABEL));
-  memset(pInfo->manufacturerID, 0x20, sizeof(pInfo->manufacturerID));
-  memcpy(pInfo->manufacturerID, TPM2_PK11_MANUFACTURER, strlen(TPM2_PK11_MANUFACTURER));
-  memset(pInfo->model, 0x20, sizeof(pInfo->label));
-  memcpy(pInfo->model, TPM2_PK11_MODEL, strlen(TPM2_PK11_MODEL));
-  memset(pInfo->serialNumber, 0x20, sizeof(pInfo->serialNumber));
-  memcpy(pInfo->serialNumber, TPM2_PK11_SERIAL, strlen(TPM2_PK11_SERIAL));
-  memset(pInfo->utcTime, 0x20, sizeof(pInfo->utcTime));
-  memcpy(pInfo->utcTime, "", strlen(""));
+  strncpy_pad(pInfo->label, TPM2_PK11_LABEL, sizeof(pInfo->label));
+  strncpy_pad(pInfo->manufacturerID, TPM2_PK11_MANUFACTURER, sizeof(pInfo->manufacturerID));
+  strncpy_pad(pInfo->model, TPM2_PK11_MODEL, sizeof(pInfo->label));
+  strncpy_pad(pInfo->serialNumber, TPM2_PK11_SERIAL, sizeof(pInfo->serialNumber));
+  strncpy_pad(pInfo->utcTime, "", sizeof(pInfo->utcTime));
 
   pInfo->flags = CKF_TOKEN_INITIALIZED;
   pInfo->ulMaxSessionCount = 1;
