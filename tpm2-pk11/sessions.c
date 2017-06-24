@@ -29,6 +29,8 @@
 #define DEFAULT_PORT 2323
 
 int session_init(struct session* session, struct config *config) {
+  session->context = NULL;
+
   size_t size;
   TSS2_RC rc;
   TSS2_TCTI_CONTEXT *tcti_ctx;

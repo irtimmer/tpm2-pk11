@@ -58,9 +58,12 @@ CK_RV C_GetSlotList(CK_BBOOL tokenPresent, CK_SLOT_ID_PTR pSlotList, CK_ULONG_PT
 
 CK_RV C_OpenSession(CK_SLOT_ID slotID, CK_FLAGS flags, CK_VOID_PTR pApplication, CK_RV  (*Notify) (CK_SESSION_HANDLE hSession, CK_NOTIFICATION event, CK_VOID_PTR pApplication), CK_SESSION_HANDLE_PTR phSession) {
   *phSession = (unsigned long) malloc(sizeof(struct session));
-  session_init((struct session*) *phSession, &pk11_config);
+  if ((void*) *phSession == NULL)
+    return CKR_GENERAL_ERROR;
 
-  return *phSession == 0 ? CKR_GENERAL_ERROR : CKR_OK;
+  int ret = session_init((struct session*) *phSession, &pk11_config);
+
+  return ret != 0 ? CKR_GENERAL_ERROR : CKR_OK;
 }
 
 CK_RV C_CloseSession(CK_SESSION_HANDLE hSession) {
