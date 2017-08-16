@@ -1,7 +1,7 @@
-TPM2 Utils
+TPM2 PK11
 ==========
 
-TPM2 Utils provide a PKCS#11 backend for a TPM 2.0 chip.
+TPM2 PK11 provide a PKCS#11 backend for a TPM 2.0 chip.
 This can be used to secure your SSH keys.
 
 NOTICE: Currently only the OpenSSH client is supported
@@ -44,4 +44,4 @@ Host *
 
 ## Copyright and license
 
-Copyright 2017 Iwan Timmer. Distributed under the GNU LGPL v2. For full terms see the LICENSE file
+Copyright 2017 Iwan Timmer. Distributed under the GNU LGPL v2.1. For full terms see the LICENSE file

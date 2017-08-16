@@ -134,10 +134,8 @@ CK_RV C_FindObjectsFinal(CK_SESSION_HANDLE hSession) {
 CK_RV C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG usCount) {
   TPM2B_PUBLIC key = {0};
   TPM_RC ret = tpm_readpublic(get_session(hSession)->context, pk11_config.key_handle, &key);
-  if (ret != TPM_RC_SUCCESS) {
-    printf("%x\n", ret);
+  if (ret != TPM_RC_SUCCESS)
     return CKR_GENERAL_ERROR;
-  }
 
   TPM2B_PUBLIC_KEY_RSA *rsa_key = &key.t.publicArea.unique.rsa;
   TPMS_RSA_PARMS *rsa_key_parms = &key.t.publicArea.parameters.rsaDetail;
