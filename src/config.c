@@ -50,9 +50,6 @@ int config_load(char* filename, struct config *config) {
         config->port = atoi(value);
       else if (strcmp(key, "type") == 0)
         config->type = (strcmp(value, "socket") == 0) ? TPM_TYPE_SOCKET : TPM_TYPE_DEVICE;
-      else if (strcmp(key, "key_handle") == 0) {
-        sscanf(value, "0x%x", &config->key_handle);
-      }
     }
     if (key != NULL)
       free(key);

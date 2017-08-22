@@ -19,6 +19,8 @@
 
 #include "tpm.h"
 
+#include <endian.h>
+
 const unsigned char oid_sha1[] = {0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2B, 0x0E, 0x03, 0x02, 0x1A, 0x05, 0x00, 0x04, 0x14};
 const unsigned char oid_sha256[] = {0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 0x00, 0x04, 0x20};
 
@@ -101,4 +103,10 @@ TPM_RC tpm_decrypt(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned ch
   memcpy(cipher.t.buffer, cipherText, cipherLength);
 
   return Tss2_Sys_RSA_Decrypt(context, handle, &sessionsData, &cipher, &scheme, &label, message, &sessionsDataOut);
+}
+
+TPM_RC tpm_list(TSS2_SYS_CONTEXT *context, TPMS_CAPABILITY_DATA* capabilityData) {
+  TPMI_YES_NO moreData;
+
+  return Tss2_Sys_GetCapability(context, 0, TPM_CAP_HANDLES, htobe32(TPM_HT_PERSISTENT), TPM_PT_HR_PERSISTENT, &moreData, capabilityData, 0);
 }

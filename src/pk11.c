@@ -118,12 +118,14 @@ CK_RV C_FindObjectsInit(CK_SESSION_HANDLE hSession, CK_ATTRIBUTE_PTR filters, CK
 }
 
 CK_RV C_FindObjects(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE_PTR phObject, CK_ULONG usMaxObjectCount, CK_ULONG_PTR nfound) {
-  if (usMaxObjectCount == 0 || get_session(hSession)->findPosition >= 1)
-    *nfound = 0;
-  else {
-    *nfound = 1;
-    get_session(hSession)->findPosition++;
-  }
+  TPMS_CAPABILITY_DATA persistent;
+  tpm_list(get_session(hSession)->context, &persistent);
+  struct session* session = get_session(hSession);
+  *nfound = (persistent.data.handles.count - session->findPosition) < usMaxObjectCount ? persistent.data.handles.count - session->findPosition : usMaxObjectCount;
+  for (int i = session->findPosition; i < persistent.data.handles.count; i++)
+    phObject[i] = persistent.data.handles.handle[i];
+
+  session->findPosition += *nfound;
   return CKR_OK;
 }
 
@@ -133,7 +135,7 @@ CK_RV C_FindObjectsFinal(CK_SESSION_HANDLE hSession) {
 
 CK_RV C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG usCount) {
   TPM2B_PUBLIC key = {0};
-  TPM_RC ret = tpm_readpublic(get_session(hSession)->context, pk11_config.key_handle, &key);
+  TPM_RC ret = tpm_readpublic(get_session(hSession)->context, hObject, &key);
   if (ret != TPM_RC_SUCCESS)
     return CKR_GENERAL_ERROR;
 
@@ -174,24 +176,28 @@ CK_RV C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, 
 }
 
 CK_RV C_SignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey) {
+  get_session(hSession)->keyHandle = hKey;
   return CKR_OK;
 }
 
 CK_RV C_Sign(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG usDataLen, CK_BYTE_PTR pSignature, CK_ULONG_PTR pusSignatureLen) {
   TPMT_SIGNATURE signature = {0};
-  TPM_RC ret = tpm_sign(get_session(hSession)->context, pk11_config.key_handle, pData, usDataLen, &signature);
+  struct session* session = get_session(hSession);
+  TPM_RC ret = tpm_sign(session->context, session->keyHandle, pData, usDataLen, &signature);
   retmem(pSignature, pusSignatureLen, signature.signature.rsassa.sig.t.buffer, signature.signature.rsassa.sig.t.size);
 
   return ret == TPM_RC_SUCCESS ? CKR_OK : CKR_GENERAL_ERROR;
 }
 
 CK_RV C_DecryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey) {
+  get_session(hSession)->keyHandle = hKey;
   return CKR_OK;
 }
 
 CK_RV C_Decrypt(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncryptedData, CK_ULONG ulEncryptedDataLen, CK_BYTE_PTR pData, CK_ULONG_PTR pulDataLen) {
   TPM2B_PUBLIC_KEY_RSA message = { .t.size = MAX_RSA_KEY_BYTES };
-  TPM_RC ret = tpm_decrypt(get_session(hSession)->context, pk11_config.key_handle, pEncryptedData, ulEncryptedDataLen, &message);
+  struct session* session = get_session(hSession);
+  TPM_RC ret = tpm_decrypt(session->context, session->keyHandle, pEncryptedData, ulEncryptedDataLen, &message);
   retmem(pData, pulDataLen, message.t.buffer, message.t.size);
 
   return ret == TPM_RC_SUCCESS ? CKR_OK : CKR_GENERAL_ERROR;

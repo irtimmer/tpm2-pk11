@@ -26,6 +26,7 @@ struct session {
   bool in_use;
   TSS2_SYS_CONTEXT *context;
   TPM_HANDLE handle;
+  TPMI_DH_OBJECT keyHandle;
   int findPosition;
 };
 

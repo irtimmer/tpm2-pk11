@@ -27,7 +27,6 @@ struct config {
   char* device;
   char* hostname;
   unsigned int port;
-  unsigned int key_handle;
 };
 
 int config_load(char* filename, struct config *config);
