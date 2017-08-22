@@ -135,7 +135,8 @@ CK_RV C_FindObjectsFinal(CK_SESSION_HANDLE hSession) {
 
 CK_RV C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG usCount) {
   TPM2B_PUBLIC key = {0};
-  TPM_RC ret = tpm_readpublic(get_session(hSession)->context, hObject, &key);
+  TPM2B_NAME name = { .t.size = sizeof(TPMU_NAME) };
+  TPM_RC ret = tpm_readpublic(get_session(hSession)->context, hObject, &key, &name);
   if (ret != TPM_RC_SUCCESS)
     return CKR_GENERAL_ERROR;
 
@@ -150,7 +151,7 @@ CK_RV C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, 
   for (int i = 0; i < usCount; i++) {
     switch (pTemplate[i].type) {
     case CKA_ID:
-      pTemplate[i].ulValueLen = 8;
+      retmem(pTemplate[i].pValue, &pTemplate[i].ulValueLen, name.t.name, name.t.size);
       break;
     case CKA_CLASS:
       retmem(pTemplate[i].pValue, &pTemplate[i].ulValueLen, &object_class, sizeof(CK_OBJECT_CLASS));
