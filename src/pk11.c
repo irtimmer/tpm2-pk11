@@ -146,6 +146,7 @@ CK_RV C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, 
   CK_OBJECT_CLASS object_class = CKO_PRIVATE_KEY;
   CK_BBOOL sign = CK_TRUE;
   CK_BBOOL decrypt = CK_TRUE;
+  CK_KEY_TYPE keyType = CKK_RSA;
   uint32_t exponent = htonl(rsa_key_parms->exponent == 0 ? 65537 : rsa_key_parms->exponent);
 
   for (int i = 0; i < usCount; i++) {
@@ -155,6 +156,9 @@ CK_RV C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, 
       break;
     case CKA_CLASS:
       retmem(pTemplate[i].pValue, &pTemplate[i].ulValueLen, &object_class, sizeof(CK_OBJECT_CLASS));
+      break;
+    case CKA_KEY_TYPE:
+      retmem(pTemplate[i].pValue, &pTemplate[i].ulValueLen, &keyType, sizeof(CK_KEY_TYPE));
       break;
     case CKA_SIGN:
       retmem(pTemplate[i].pValue, &pTemplate[i].ulValueLen, &sign, sizeof(CK_BBOOL));
