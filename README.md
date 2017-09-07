@@ -19,8 +19,7 @@ rm key.name *.ctx
 ```
 2. Create configuration file in ~/.tpm2
 ```
-echo key ~/tpm2/key.pub > ~/.tpm2/config
-echo "key_handle 0x81010010" > ~/.tpm2/config
+touch ~/.tpm2/config
 ```
 3. Extract public key
 ```
