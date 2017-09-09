@@ -23,6 +23,7 @@
 
 #include <tcti/tcti_socket.h>
 #include <tcti/tcti_device.h>
+#include <tcti/tcti-tabrmd.h>
 
 #define DEFAULT_DEVICE "/dev/tpm0"
 #define DEFAULT_HOSTNAME "127.0.0.1"
@@ -31,9 +32,9 @@
 int session_init(struct session* session, struct config *config) {
   session->context = NULL;
 
-  size_t size;
+  size_t size = 0;
+  TSS2_TCTI_CONTEXT *tcti_ctx = NULL;
   TSS2_RC rc;
-  TSS2_TCTI_CONTEXT *tcti_ctx;
   TCTI_SOCKET_CONF socket_conf = {
     .hostname = config->hostname != NULL ? config->hostname : DEFAULT_HOSTNAME,
     .port = config->port > 0 ? config->port : DEFAULT_PORT,
@@ -44,8 +45,10 @@ int session_init(struct session* session, struct config *config) {
 
   if (config->type == TPM_TYPE_SOCKET)
     rc = InitSocketTcti(NULL, &size, &socket_conf, 0);
-  else
+  else if (config->type == TPM_TYPE_DEVICE)
     rc = InitDeviceTcti(tcti_ctx, &size, 0);
+  else
+    rc = tss2_tcti_tabrmd_init(tcti_ctx, &size);
 
   if (rc != TSS2_RC_SUCCESS)
     goto cleanup;
@@ -56,14 +59,15 @@ int session_init(struct session* session, struct config *config) {
 
   if (config->type == TPM_TYPE_SOCKET)
     rc = InitSocketTcti(tcti_ctx, &size, &socket_conf, 0);
-  else {
+  else if (config->type == TPM_TYPE_DEVICE) {
     TCTI_DEVICE_CONF conf = {
       .device_path = config->device != NULL ? config->device : DEFAULT_DEVICE,
       .logCallback = NULL,
       .logData = NULL,
     };
     rc = InitDeviceTcti(tcti_ctx, &size, &conf);
-  }
+  } else
+    rc = tss2_tcti_tabrmd_init(tcti_ctx, &size);
 
   if (rc != TSS2_RC_SUCCESS)
     goto cleanup;

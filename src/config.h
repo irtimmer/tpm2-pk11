@@ -21,6 +21,7 @@
 
 #define TPM_TYPE_DEVICE 0
 #define TPM_TYPE_SOCKET 1
+#define TPM_TYPE_TABRMD 2
 
 struct config {
   int type;

@@ -49,7 +49,12 @@ int config_load(char* filename, struct config *config) {
       } else if (strcmp(key, "port") == 0)
         config->port = atoi(value);
       else if (strcmp(key, "type") == 0)
-        config->type = (strcmp(value, "socket") == 0) ? TPM_TYPE_SOCKET : TPM_TYPE_DEVICE;
+        if (strcmp(value, "socket") == 0)
+          config->type = TPM_TYPE_SOCKET;
+        else if (strcmp(value, "device") == 0)
+          config->type = TPM_TYPE_SOCKET;
+        else if (strcmp(value, "tabrmd") == 0)
+          config->type = TPM_TYPE_TABRMD;
     }
     if (key != NULL)
       free(key);
