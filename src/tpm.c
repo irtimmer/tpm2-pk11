@@ -24,7 +24,7 @@
 const unsigned char oid_sha1[] = {0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2B, 0x0E, 0x03, 0x02, 0x1A, 0x05, 0x00, 0x04, 0x14};
 const unsigned char oid_sha256[] = {0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 0x00, 0x04, 0x20};
 
-TPM_RC tpm_readpublic(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, TPM2B_PUBLIC *public, TPM2B_NAME *name) {
+TPM_RC tpm_readpublic(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, TPM2B_PUBLIC *public, TPM2B_NAME *name, pPkcsObject key_object, pPkcsKey key, pPkcsPublicKey public_key) {
   TPMS_AUTH_RESPONSE sessionDataOut;
   TPMS_AUTH_RESPONSE *sessionDataOutArray[1] = {&sessionDataOut};
 
@@ -34,7 +34,33 @@ TPM_RC tpm_readpublic(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, TPM2B_PU
 
   TPM2B_NAME qualifiedName = { .t.size = sizeof(TPMU_NAME) };
 
-  return Tss2_Sys_ReadPublic(context, handle, 0, public, name, &qualifiedName, &sessionsDataOut);
+  TPM_RC ret = Tss2_Sys_ReadPublic(context, handle, 0, public, name, &qualifiedName, &sessionsDataOut);
+  if (ret != TPM_RC_SUCCESS)
+    return ret;
+
+  TPM2B_PUBLIC_KEY_RSA *rsa_key = &public->t.publicArea.unique.rsa;
+  TPMS_RSA_PARMS *rsa_key_parms = &public->t.publicArea.parameters.rsaDetail;
+
+  if (key_object) {
+    key_object->id = name->t.name;
+    key_object->id_size = name->t.size;
+    key_object->class = CKO_PRIVATE_KEY;
+  }
+
+  if (key) {
+    key->sign = CK_TRUE;
+    key->decrypt = CK_TRUE;
+    key->key_type = CKK_RSA;
+  }
+
+  if (public_key) {
+    public_key->modulus = rsa_key->b.buffer;
+    public_key->modulus_size = rsa_key_parms->keyBits / 8;
+    public_key->bits = rsa_key_parms->keyBits;
+    public_key->exponent = htobe32(rsa_key_parms->exponent == 0 ? 65537 : rsa_key_parms->exponent);
+  }
+
+  return ret;
 }
 
 TPM_RC tpm_sign(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned char *hash, unsigned long hashLength, TPMT_SIGNATURE *signature) {

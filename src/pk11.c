@@ -29,8 +29,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <arpa/inet.h>
-
 #define SLOT_ID 0x1234
 
 #define NELEMS(x) (sizeof(x) / sizeof((x)[0]))
@@ -157,28 +155,13 @@ CK_RV C_FindObjectsFinal(CK_SESSION_HANDLE hSession) {
 CK_RV C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG usCount) {
   TPM2B_PUBLIC tpm_key = {0};
   TPM2B_NAME name = { .t.size = sizeof(TPMU_NAME) };
-  TPM_RC ret = tpm_readpublic(get_session(hSession)->context, hObject, &tpm_key, &name);
+  PkcsObject key_object;
+  PkcsKey key;
+  PkcsPublicKey public_key;
+  TPM_RC ret = tpm_readpublic(get_session(hSession)->context, hObject, &tpm_key, &name, &key_object, &key, &public_key);
   if (ret != TPM_RC_SUCCESS)
     return CKR_GENERAL_ERROR;
 
-  TPM2B_PUBLIC_KEY_RSA *rsa_key = &tpm_key.t.publicArea.unique.rsa;
-  TPMS_RSA_PARMS *rsa_key_parms = &tpm_key.t.publicArea.parameters.rsaDetail;
-  PkcsObject key_object = {
-    .id = name.t.name,
-    .id_size = name.t.size,
-    .class = CKO_PRIVATE_KEY
-  };
-  PkcsKey key = {
-    .sign = CK_TRUE,
-    .decrypt = CK_TRUE,
-    .key_type = CKK_RSA
-  };
-  PkcsPublicKey public_key = {
-    .modulus = rsa_key->b.buffer,
-    .modulus_size = rsa_key_parms->keyBits / 8,
-    .bits = rsa_key_parms->keyBits,
-    .exponent = htonl(rsa_key_parms->exponent == 0 ? 65537 : rsa_key_parms->exponent)
-  };
   AttrIndexEntry entries[] = {
     attr_index_entry(&key_object, OBJECT_INDEX),
     attr_index_entry(&key, KEY_INDEX),
