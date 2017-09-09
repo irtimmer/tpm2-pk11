@@ -17,34 +17,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <stdint.h>
+#include <stddef.h>
 
 #include <p11-kit/pkcs11.h>
 
-#define TPM2_PK11_CONFIG_DIR ".tpm2"
-#define TPM2_PK11_CONFIG_FILE "config"
+#define attr_index_of(type, struct, attribute) {type, offsetof(struct, attribute), sizeof(((struct*)0)->attribute, 0)}
+#define attr_dynamic_index_of(type, struct, attribute, size_attribute) {type, offsetof(struct, attribute), 0, offsetof(struct, size_attribute)}
+#define attr_index_entry(object, index) {object, index, NELEMS(index)}
 
-#define TPM2_PK11_LABEL ""
-#define TPM2_PK11_MANUFACTURER "Iwan Timmer"
-#define TPM2_PK11_LIBRARY_DESCRIPTION "TPM2 PKCS11 Library"
-#define TPM2_PK11_MODEL "TPM2"
-#define TPM2_PK11_SERIAL "123456789"
+typedef struct attr_index_t {
+  CK_ATTRIBUTE_TYPE type;
+  size_t offset;
+  size_t size;
+  size_t size_offset;
+} AttrIndex, *pAttrIndex;
 
-typedef struct pkcs_object_t {
-  void* id;
-  size_t id_size;
-  CK_OBJECT_CLASS class;
-} PkcsObject, *pPkcsObject;
-
-typedef struct pkcs_key_t {
-  CK_BBOOL sign;
-  CK_BBOOL decrypt;
-  CK_KEY_TYPE key_type;
-} PkcsKey, *pPkcsKey;
-
-typedef struct pkcs_public_key_t {
-  void* modulus;
-  size_t modulus_size;
-  CK_ULONG bits;
-  uint32_t exponent;
-} PkcsPublicKey, *pPublicPkcsKey;
+typedef struct attr_index_entry_t {
+  void* object;
+  pAttrIndex indexes;
+  size_t num_attrs;
+} AttrIndexEntry, *pAttrIndexEntry;

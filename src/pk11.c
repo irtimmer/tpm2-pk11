@@ -23,19 +23,38 @@
 #include "sessions.h"
 #include "utils.h"
 #include "tpm.h"
+#include "object.h"
 
 #include <sys/mman.h>
 #include <string.h>
 #include <stdio.h>
 
 #include <arpa/inet.h>
-#include <p11-kit/pkcs11.h>
 
 #define SLOT_ID 0x1234
+
+#define NELEMS(x) (sizeof(x) / sizeof((x)[0]))
 
 #define get_session(x) ((struct session*) x)
 
 static struct config pk11_config = {0};
+
+static AttrIndex OBJECT_INDEX[] = {
+  attr_dynamic_index_of(CKA_ID, PkcsObject, id, id_size),
+  attr_index_of(CKA_CLASS, PkcsObject, class)
+};
+
+static AttrIndex KEY_INDEX[] = {
+  attr_index_of(CKA_SIGN, PkcsKey, sign),
+  attr_index_of(CKA_DECRYPT, PkcsKey, decrypt),
+  attr_index_of(CKA_KEY_TYPE, PkcsKey, key_type)
+};
+
+static AttrIndex PUBLIC_KEY_INDEX[] = {
+  attr_dynamic_index_of(CKA_MODULUS, PkcsPublicKey, modulus, modulus_size),
+  attr_index_of(CKA_MODULUS_BITS, PkcsPublicKey, bits),
+  attr_index_of(CKA_PUBLIC_EXPONENT, PkcsPublicKey, exponent)
+};
 
 CK_RV C_GetInfo(CK_INFO_PTR pInfo) {
   pInfo->cryptokiVersion.major = CRYPTOKI_VERSION_MAJOR;
@@ -136,46 +155,48 @@ CK_RV C_FindObjectsFinal(CK_SESSION_HANDLE hSession) {
 }
 
 CK_RV C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG usCount) {
-  TPM2B_PUBLIC key = {0};
+  TPM2B_PUBLIC tpm_key = {0};
   TPM2B_NAME name = { .t.size = sizeof(TPMU_NAME) };
-  TPM_RC ret = tpm_readpublic(get_session(hSession)->context, hObject, &key, &name);
+  TPM_RC ret = tpm_readpublic(get_session(hSession)->context, hObject, &tpm_key, &name);
   if (ret != TPM_RC_SUCCESS)
     return CKR_GENERAL_ERROR;
 
-  TPM2B_PUBLIC_KEY_RSA *rsa_key = &key.t.publicArea.unique.rsa;
-  TPMS_RSA_PARMS *rsa_key_parms = &key.t.publicArea.parameters.rsaDetail;
-
-  CK_OBJECT_CLASS object_class = CKO_PRIVATE_KEY;
-  CK_BBOOL sign = CK_TRUE;
-  CK_BBOOL decrypt = CK_TRUE;
-  CK_KEY_TYPE keyType = CKK_RSA;
-  uint32_t exponent = htonl(rsa_key_parms->exponent == 0 ? 65537 : rsa_key_parms->exponent);
+  TPM2B_PUBLIC_KEY_RSA *rsa_key = &tpm_key.t.publicArea.unique.rsa;
+  TPMS_RSA_PARMS *rsa_key_parms = &tpm_key.t.publicArea.parameters.rsaDetail;
+  PkcsObject key_object = {
+    .id = name.t.name,
+    .id_size = name.t.size,
+    .class = CKO_PRIVATE_KEY
+  };
+  PkcsKey key = {
+    .sign = CK_TRUE,
+    .decrypt = CK_TRUE,
+    .key_type = CKK_RSA
+  };
+  PkcsPublicKey public_key = {
+    .modulus = rsa_key->b.buffer,
+    .modulus_size = rsa_key_parms->keyBits / 8,
+    .bits = rsa_key_parms->keyBits,
+    .exponent = htonl(rsa_key_parms->exponent == 0 ? 65537 : rsa_key_parms->exponent)
+  };
+  AttrIndexEntry entries[] = {
+    attr_index_entry(&key_object, OBJECT_INDEX),
+    attr_index_entry(&key, KEY_INDEX),
+    attr_index_entry(&public_key, PUBLIC_KEY_INDEX)
+  };
 
   for (int i = 0; i < usCount; i++) {
-    switch (pTemplate[i].type) {
-    case CKA_ID:
-      retmem(pTemplate[i].pValue, &pTemplate[i].ulValueLen, name.t.name, name.t.size);
-      break;
-    case CKA_CLASS:
-      retmem(pTemplate[i].pValue, &pTemplate[i].ulValueLen, &object_class, sizeof(CK_OBJECT_CLASS));
-      break;
-    case CKA_KEY_TYPE:
-      retmem(pTemplate[i].pValue, &pTemplate[i].ulValueLen, &keyType, sizeof(CK_KEY_TYPE));
-      break;
-    case CKA_SIGN:
-      retmem(pTemplate[i].pValue, &pTemplate[i].ulValueLen, &sign, sizeof(CK_BBOOL));
-      break;
-    case CKA_DECRYPT:
-      retmem(pTemplate[i].pValue, &pTemplate[i].ulValueLen, &decrypt, sizeof(CK_BBOOL));
-      break;
-    case CKA_PUBLIC_EXPONENT:
-      retmem(pTemplate[i].pValue, &pTemplate[i].ulValueLen, &exponent, sizeof(uint32_t));
-      break;
-    case CKA_MODULUS:
-      retmem(pTemplate[i].pValue, &pTemplate[i].ulValueLen, rsa_key->b.buffer, rsa_key_parms->keyBits / 8);
-      break;
-    default:
-      pTemplate[i].ulValueLen = 0;
+    for (int j = 0; j < NELEMS(entries); j++) {
+      void *obj = entries[j].object;
+      pAttrIndex index = entries[j].indexes;
+      for (int k = 0; k < entries[j].num_attrs; k++) {
+        if (pTemplate[i].type == index[k].type) {
+          if (index[k].size_offset == 0)
+            retmem(pTemplate[i].pValue, &pTemplate[i].ulValueLen, obj + index[k].offset, index[k].size);
+          else
+            retmem(pTemplate[i].pValue, &pTemplate[i].ulValueLen, *((void**) (obj + index[k].offset)), *((size_t*) (obj + index[k].size_offset)));
+        }
+      }
     }
   }
 
