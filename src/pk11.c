@@ -121,10 +121,12 @@ CK_RV C_FindObjects(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE_PTR phObject, C
   TPMS_CAPABILITY_DATA persistent;
   tpm_list(get_session(hSession)->context, &persistent);
   struct session* session = get_session(hSession);
-  *nfound = (persistent.data.handles.count - session->findPosition) < usMaxObjectCount ? persistent.data.handles.count - session->findPosition : usMaxObjectCount;
-  for (int i = session->findPosition; i < persistent.data.handles.count; i++)
-    phObject[i] = persistent.data.handles.handle[i];
+  *nfound = persistent.data.handles.count - session->findPosition;
+  if (*nfound > usMaxObjectCount)
+      *nfound = usMaxObjectCount;
 
+  for (int i = 0; i < *nfound; i++)
+    phObject[i] = persistent.data.handles.handle[i + session->findPosition];
   session->findPosition += *nfound;
   return CKR_OK;
 }
