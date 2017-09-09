@@ -21,7 +21,7 @@
 
 #include <p11-kit/pkcs11.h>
 
-#define attr_index_of(type, struct, attribute) {type, offsetof(struct, attribute), sizeof(((struct*)0)->attribute, 0)}
+#define attr_index_of(type, struct, attribute) {type, offsetof(struct, attribute), sizeof(((struct*)0)->attribute), 0}
 #define attr_dynamic_index_of(type, struct, attribute, size_attribute) {type, offsetof(struct, attribute), 0, offsetof(struct, size_attribute)}
 #define attr_index_entry(object, index) {object, index, NELEMS(index)}
 
@@ -37,3 +37,4 @@ typedef struct attr_index_entry_t {
   pAttrIndex indexes;
   size_t num_attrs;
 } AttrIndexEntry, *pAttrIndexEntry;
+void* attr_get(pAttrIndexEntry entries, size_t num_entries, CK_ATTRIBUTE_TYPE type, size_t *size);

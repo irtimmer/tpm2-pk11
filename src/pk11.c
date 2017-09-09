@@ -130,7 +130,10 @@ CK_RV C_Finalize(CK_VOID_PTR pReserved) {
 }
 
 CK_RV C_FindObjectsInit(CK_SESSION_HANDLE hSession, CK_ATTRIBUTE_PTR filters, CK_ULONG nfilters) {
-  get_session(hSession)->findPosition = 0;
+  struct session *session = get_session(hSession);
+  session->findPosition = 0;
+  session->filters = filters;
+  session->num_filters = nfilters;
   return CKR_OK;
 }
 
@@ -138,13 +141,41 @@ CK_RV C_FindObjects(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE_PTR phObject, C
   TPMS_CAPABILITY_DATA persistent;
   tpm_list(get_session(hSession)->context, &persistent);
   struct session* session = get_session(hSession);
-  *nfound = persistent.data.handles.count - session->findPosition;
-  if (*nfound > usMaxObjectCount)
-      *nfound = usMaxObjectCount;
+  *nfound = 0;
 
-  for (int i = 0; i < *nfound; i++)
-    phObject[i] = persistent.data.handles.handle[i + session->findPosition];
-  session->findPosition += *nfound;
+  for (int i = session->findPosition; i < persistent.data.handles.count && *nfound < usMaxObjectCount; i++) {
+    session->findPosition++;
+    CK_OBJECT_HANDLE handle = persistent.data.handles.handle[i];
+
+    TPM2B_PUBLIC tpm_key = {0};
+    TPM2B_NAME name = { .t.size = sizeof(TPMU_NAME) };
+    PkcsObject key_object;
+    PkcsKey key;
+    PkcsPublicKey public_key;
+    TPM_RC ret = tpm_readpublic(get_session(hSession)->context, handle, &tpm_key, &name, &key_object, &key, &public_key);    
+    AttrIndexEntry entries[] = {
+      attr_index_entry(&key_object, OBJECT_INDEX),
+      attr_index_entry(&key, KEY_INDEX),
+      attr_index_entry(&public_key, PUBLIC_KEY_INDEX)
+    };
+
+    if (ret == TPM_RC_SUCCESS) {
+      bool filtered = false;
+      for (int j = 0; j < session->num_filters; j++) {
+        size_t size = 0;
+        void* value = attr_get(entries, NELEMS(entries), session->filters[j].type, &size);
+        if (session->filters[j].ulValueLen != size || memcmp(session->filters[j].pValue, value, size) != 0) {
+          filtered = true;
+          break;
+        }
+      }
+      if (!filtered) {
+        phObject[*nfound] = handle;
+        (*nfound)++;
+      }
+    }    
+  }
+
   return CKR_OK;
 }
 

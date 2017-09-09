@@ -49,4 +49,4 @@ typedef struct pkcs_public_key_t {
   size_t modulus_size;
   CK_ULONG bits;
   uint32_t exponent;
-} PkcsPublicKey, *pPublicPkcsKey;
+} PkcsPublicKey, *pPkcsPublicKey;

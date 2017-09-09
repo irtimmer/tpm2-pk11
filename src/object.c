@@ -17,21 +17,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "config.h"
+#include "object.h"
 
-#include <stdbool.h>
-#include <sapi/tpm20.h>
-#include <p11-kit/pkcs11.h>
-
-struct session {
-  bool in_use;
-  TSS2_SYS_CONTEXT *context;
-  TPM_HANDLE handle;
-  TPMI_DH_OBJECT keyHandle;
-  int findPosition;
-  CK_ATTRIBUTE_PTR filters;
-  size_t num_filters;
-};
-
-int session_init(struct session* session, struct config *config);
-void session_close(struct session* session);
+void* attr_get(pAttrIndexEntry entries, size_t num_entries, CK_ATTRIBUTE_TYPE type, size_t *size) {
+  for (int i = 0; i < num_entries; i++) {
+    for (int j = 0; j < entries[i].num_attrs; j++) {
+      if (type == entries[i].indexes[j].type) {
+        if (entries[i].indexes[j].size_offset == 0) {
+          *size = entries[i].indexes[j].size;
+          return entries[i].object + entries[i].indexes[j].offset;
+        } else {
+          *size = *((size_t*) (entries[i].object + entries[i].indexes[j].size_offset));
+          return *((void**) (entries[i].object + entries[i].indexes[j].offset));
+        }
+      }
+    }
+  }
+}
