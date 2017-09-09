@@ -81,6 +81,8 @@ int session_init(struct session* session, struct config *config) {
   };
   rc = Tss2_Sys_Initialize(session->context, size, tcti_ctx, &abi_version);
 
+  session->objects = object_load(session->context);
+
   return 0;
 
   cleanup:
@@ -94,5 +96,6 @@ int session_init(struct session* session, struct config *config) {
 }
 
 void session_close(struct session* session) {
+  object_free(session->objects);
   Tss2_Sys_Finalize(session->context);
 }

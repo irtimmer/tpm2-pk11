@@ -31,28 +31,9 @@
 
 #define SLOT_ID 0x1234
 
-#define NELEMS(x) (sizeof(x) / sizeof((x)[0]))
-
 #define get_session(x) ((struct session*) x)
 
 static struct config pk11_config = {0};
-
-static AttrIndex OBJECT_INDEX[] = {
-  attr_dynamic_index_of(CKA_ID, PkcsObject, id, id_size),
-  attr_index_of(CKA_CLASS, PkcsObject, class)
-};
-
-static AttrIndex KEY_INDEX[] = {
-  attr_index_of(CKA_SIGN, PkcsKey, sign),
-  attr_index_of(CKA_DECRYPT, PkcsKey, decrypt),
-  attr_index_of(CKA_KEY_TYPE, PkcsKey, key_type)
-};
-
-static AttrIndex PUBLIC_KEY_INDEX[] = {
-  attr_dynamic_index_of(CKA_MODULUS, PkcsPublicKey, modulus, modulus_size),
-  attr_index_of(CKA_MODULUS_BITS, PkcsPublicKey, bits),
-  attr_index_of(CKA_PUBLIC_EXPONENT, PkcsPublicKey, exponent)
-};
 
 CK_RV C_GetInfo(CK_INFO_PTR pInfo) {
   pInfo->cryptokiVersion.major = CRYPTOKI_VERSION_MAJOR;
@@ -131,7 +112,7 @@ CK_RV C_Finalize(CK_VOID_PTR pReserved) {
 
 CK_RV C_FindObjectsInit(CK_SESSION_HANDLE hSession, CK_ATTRIBUTE_PTR filters, CK_ULONG nfilters) {
   struct session *session = get_session(hSession);
-  session->findPosition = 0;
+  session->find_cursor = session->objects;
   session->filters = filters;
   session->num_filters = nfilters;
   return CKR_OK;
@@ -143,37 +124,22 @@ CK_RV C_FindObjects(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE_PTR phObject, C
   struct session* session = get_session(hSession);
   *nfound = 0;
 
-  for (int i = session->findPosition; i < persistent.data.handles.count && *nfound < usMaxObjectCount; i++) {
-    session->findPosition++;
-    CK_OBJECT_HANDLE handle = persistent.data.handles.handle[i];
-
-    TPM2B_PUBLIC tpm_key = {0};
-    TPM2B_NAME name = { .t.size = sizeof(TPMU_NAME) };
-    PkcsObject key_object;
-    PkcsKey key;
-    PkcsPublicKey public_key;
-    TPM_RC ret = tpm_readpublic(get_session(hSession)->context, handle, &tpm_key, &name, &key_object, &key, &public_key);    
-    AttrIndexEntry entries[] = {
-      attr_index_entry(&key_object, OBJECT_INDEX),
-      attr_index_entry(&key, KEY_INDEX),
-      attr_index_entry(&public_key, PUBLIC_KEY_INDEX)
-    };
-
-    if (ret == TPM_RC_SUCCESS) {
-      bool filtered = false;
-      for (int j = 0; j < session->num_filters; j++) {
-        size_t size = 0;
-        void* value = attr_get(entries, NELEMS(entries), session->filters[j].type, &size);
-        if (session->filters[j].ulValueLen != size || memcmp(session->filters[j].pValue, value, size) != 0) {
-          filtered = true;
-          break;
-        }
+  while (session->find_cursor != NULL && *nfound < usMaxObjectCount) {
+    pObject object = session->find_cursor->object;
+    bool filtered = false;
+    for (int j = 0; j < session->num_filters; j++) {
+      size_t size = 0;
+      void* value = attr_get(object->entries, object->num_entries, session->filters[j].type, &size);
+      if (session->filters[j].ulValueLen != size || memcmp(session->filters[j].pValue, value, size) != 0) {
+        filtered = true;
+        break;
       }
-      if (!filtered) {
-        phObject[*nfound] = handle;
-        (*nfound)++;
-      }
-    }    
+    }
+    if (!filtered) {
+      phObject[*nfound] = session->find_cursor->object;
+      (*nfound)++;
+    }
+    session->find_cursor = session->find_cursor->next;
   }
 
   return CKR_OK;
@@ -184,26 +150,13 @@ CK_RV C_FindObjectsFinal(CK_SESSION_HANDLE hSession) {
 }
 
 CK_RV C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG usCount) {
-  TPM2B_PUBLIC tpm_key = {0};
-  TPM2B_NAME name = { .t.size = sizeof(TPMU_NAME) };
-  PkcsObject key_object;
-  PkcsKey key;
-  PkcsPublicKey public_key;
-  TPM_RC ret = tpm_readpublic(get_session(hSession)->context, hObject, &tpm_key, &name, &key_object, &key, &public_key);
-  if (ret != TPM_RC_SUCCESS)
-    return CKR_GENERAL_ERROR;
-
-  AttrIndexEntry entries[] = {
-    attr_index_entry(&key_object, OBJECT_INDEX),
-    attr_index_entry(&key, KEY_INDEX),
-    attr_index_entry(&public_key, PUBLIC_KEY_INDEX)
-  };
+  pObject object = (pObject) hObject;
 
   for (int i = 0; i < usCount; i++) {
-    for (int j = 0; j < NELEMS(entries); j++) {
-      void *obj = entries[j].object;
-      pAttrIndex index = entries[j].indexes;
-      for (int k = 0; k < entries[j].num_attrs; k++) {
+    for (int j = 0; j < object->num_entries; j++) {
+      void *obj = object->entries[j].object;
+      pAttrIndex index = object->entries[j].indexes;
+      for (int k = 0; k < object->entries[j].num_attrs; k++) {
         if (pTemplate[i].type == index[k].type) {
           if (index[k].size_offset == 0)
             retmem(pTemplate[i].pValue, &pTemplate[i].ulValueLen, obj + index[k].offset, index[k].size);

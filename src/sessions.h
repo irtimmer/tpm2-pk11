@@ -18,17 +18,17 @@
  */
 
 #include "config.h"
+#include "objects.h"
 
 #include <stdbool.h>
 #include <sapi/tpm20.h>
 #include <p11-kit/pkcs11.h>
 
 struct session {
-  bool in_use;
   TSS2_SYS_CONTEXT *context;
-  TPM_HANDLE handle;
+  pObjectList objects;
   TPMI_DH_OBJECT keyHandle;
-  int findPosition;
+  pObjectList find_cursor;
   CK_ATTRIBUTE_PTR filters;
   size_t num_filters;
 };

@@ -17,9 +17,26 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#pragma once
+
+#include "object.h"
+
 #include <sapi/tpm20.h>
 
-TPM_RC tpm_readpublic(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, TPM2B_PUBLIC *public, TPM2B_NAME *name);
-TPM_RC tpm_sign(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned char *hash, unsigned long hashLength, TPMT_SIGNATURE *signature);
-TPM_RC tpm_decrypt(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned char *cipherText, unsigned long cipherLength, TPM2B_PUBLIC_KEY_RSA *message);
-TPM_RC tpm_list(TSS2_SYS_CONTEXT *context, TPMS_CAPABILITY_DATA* capabilityData);
+typedef struct object_t {
+  int id;
+  void* userdata;
+  pAttrIndexEntry entries;
+  size_t num_entries;
+} Object, *pObject;
+
+typedef struct object_list_t {
+  pObject object;
+  struct object_list_t* next;
+} ObjectList, *pObjectList;
+
+pObject object_get(pObjectList list, int id);
+void object_add(pObjectList list, pObject object);
+void object_free(pObjectList list);
+
+pObjectList object_load(TSS2_SYS_CONTEXT *ctx);
