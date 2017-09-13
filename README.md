@@ -17,9 +17,9 @@ tpm2_load -c po.ctx -u key.pub -r key.priv -n key.name -C obj.ctx
 tpm2_evictcontrol -A o -c obj.ctx -S 0x81010010
 rm key.name *.ctx
 ```
-2. Create configuration file in ~/.tpm2
+2. Create configuration file and change it for your setup
 ```
-touch ~/.tpm2/config
+cp config.sample ~/.tpm2/config
 ```
 3. Extract public key
 ```

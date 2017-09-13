@@ -1,0 +1,12 @@
+# Type can be device/socket/tabrmd
+type device
+# Hostname to connect when using socket
+hostname localhost
+# Port number of TPM socket to connect to
+port 2321
+# Device to use as TPM
+device /dev/tpm0
+# Sign using encrypt in case TPM doesn't support hash format
+# For example SSH use SHA512 which isn't supported by all TPM's
+# Enabling this option requires key's to be encryption keys instead of signing only keys
+sign-using-encrypt true
