@@ -24,10 +24,14 @@ void* attr_get(pAttrIndexEntry entries, size_t num_entries, CK_ATTRIBUTE_TYPE ty
     for (int j = 0; j < entries[i].num_attrs; j++) {
       if (type == entries[i].indexes[j].type) {
         if (entries[i].indexes[j].size_offset == 0) {
-          *size = entries[i].indexes[j].size;
+          if (size)
+            *size = entries[i].indexes[j].size;
+
           return entries[i].object + entries[i].indexes[j].offset;
         } else {
-          *size = *((size_t*) (entries[i].object + entries[i].indexes[j].size_offset));
+          if (size)
+            *size = *((size_t*) (entries[i].object + entries[i].indexes[j].size_offset));
+
           return *((void**) (entries[i].object + entries[i].indexes[j].offset));
         }
       }

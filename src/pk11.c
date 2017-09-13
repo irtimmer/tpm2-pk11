@@ -173,14 +173,25 @@ CK_RV C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, 
 CK_RV C_SignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey) {
   pObject object = (pObject) hKey;
   get_session(hSession)->keyHandle = object->tpm_handle;
+  get_session(hSession)->current_object = object;
   return CKR_OK;
 }
 
 CK_RV C_Sign(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG usDataLen, CK_BYTE_PTR pSignature, CK_ULONG_PTR pusSignatureLen) {
-  TPMT_SIGNATURE signature = {0};
   struct session* session = get_session(hSession);
-  TPM_RC ret = tpm_sign(session->context, session->keyHandle, pData, usDataLen, &signature);
-  retmem(pSignature, pusSignatureLen, signature.signature.rsassa.sig.t.buffer, signature.signature.rsassa.sig.t.size);
+  TPM_RC ret;
+
+  if (pk11_config.sign_using_encrypt) {
+    TPM2B_PUBLIC_KEY_RSA message = { .t.size = MAX_RSA_KEY_BYTES };
+    pObject object = session->current_object->opposite;
+    CK_ULONG_PTR key_size = (CK_ULONG_PTR) attr_get(object->entries, object->num_entries, CKA_MODULUS_BITS, NULL);
+    TPM_RC ret = tpm_sign_encrypt(session->context, session->keyHandle, *key_size / 8, pData, usDataLen, &message);
+    retmem(pSignature, pusSignatureLen, message.t.buffer, message.t.size);
+  } else {
+    TPMT_SIGNATURE signature = {0};
+    TPM_RC ret = tpm_sign(session->context, session->keyHandle, pData, usDataLen, &signature);
+    retmem(pSignature, pusSignatureLen, signature.signature.rsassa.sig.t.buffer, signature.signature.rsassa.sig.t.size);
+  }
 
   return ret == TPM_RC_SUCCESS ? CKR_OK : CKR_GENERAL_ERROR;
 }

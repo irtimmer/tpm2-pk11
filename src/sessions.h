@@ -31,6 +31,7 @@ struct session {
   pObjectList find_cursor;
   CK_ATTRIBUTE_PTR filters;
   size_t num_filters;
+  pObject current_object;
 };
 
 int session_init(struct session* session, struct config *config);

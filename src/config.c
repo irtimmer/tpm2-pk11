@@ -48,6 +48,8 @@ int config_load(char* filename, struct config *config) {
         value = NULL;
       } else if (strcmp(key, "port") == 0)
         config->port = atoi(value);
+      else if (strcmp(key, "sign-using-encrypt") == 0)
+        config->sign_using_encrypt = strcasecmp(value, "true") == 0;
       else if (strcmp(key, "type") == 0)
         if (strcmp(value, "socket") == 0)
           config->type = TPM_TYPE_SOCKET;

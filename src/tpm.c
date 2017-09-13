@@ -104,6 +104,32 @@ TPM_RC tpm_decrypt(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned ch
   return Tss2_Sys_RSA_Decrypt(context, handle, &sessionsData, &cipher, &scheme, &label, message, &sessionsDataOut);
 }
 
+TPM_RC tpm_sign_encrypt(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, size_t key_size, unsigned char *hash, size_t hash_length, TPM2B_PUBLIC_KEY_RSA *signature) {
+  TPMS_AUTH_COMMAND sessionData = {0};
+  sessionData.sessionHandle = TPM_RS_PW;
+
+  TPMS_AUTH_COMMAND *sessionDataArray[1] = {&sessionData};
+  TSS2_SYS_CMD_AUTHS sessionsData;
+  sessionsData.cmdAuths = &sessionDataArray[0];
+  sessionsData.cmdAuthsCount = 1;
+
+  TPM2B_PUBLIC_KEY_RSA message = { .t.size = key_size };
+  unsigned char *p = message.t.buffer;
+
+  *p++ = 0;
+  *p++ = 1;
+  size_t nb_pad = key_size - hash_length - 3;
+  memset(p, 0xFF, nb_pad);
+  p += nb_pad;
+  *p++ = 0;
+  memcpy(p, hash, hash_length);
+
+  TPM2B_DATA label = {0};
+  TPMT_RSA_DECRYPT scheme = { .scheme = TPM_ALG_NULL };
+
+  return Tss2_Sys_RSA_Decrypt(context, handle, &sessionsData, &message, &scheme, &label, signature, NULL);
+}
+
 TPM_RC tpm_list(TSS2_SYS_CONTEXT *context, TPMS_CAPABILITY_DATA* capabilityData) {
   TPMI_YES_NO moreData;
 

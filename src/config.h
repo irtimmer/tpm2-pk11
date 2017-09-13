@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 #define TPM_TYPE_DEVICE 0
 #define TPM_TYPE_SOCKET 1
 #define TPM_TYPE_TABRMD 2
@@ -28,6 +30,7 @@ struct config {
   char* device;
   char* hostname;
   unsigned int port;
+  bool sign_using_encrypt;
 };
 
 int config_load(char* filename, struct config *config);
