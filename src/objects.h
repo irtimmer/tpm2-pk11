@@ -28,6 +28,8 @@ typedef struct object_t {
   void* userdata;
   pAttrIndexEntry entries;
   size_t num_entries;
+  TPMI_DH_OBJECT tpm_handle;
+  struct object_t *opposite;
 } Object, *pObject;
 
 typedef struct object_list_t {

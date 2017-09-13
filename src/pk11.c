@@ -171,7 +171,8 @@ CK_RV C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, 
 }
 
 CK_RV C_SignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey) {
-  get_session(hSession)->keyHandle = hKey;
+  pObject object = (pObject) hKey;
+  get_session(hSession)->keyHandle = object->tpm_handle;
   return CKR_OK;
 }
 
@@ -185,7 +186,8 @@ CK_RV C_Sign(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG usDataLen, 
 }
 
 CK_RV C_DecryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey) {
-  get_session(hSession)->keyHandle = hKey;
+  pObject object = (pObject) hKey;
+  get_session(hSession)->keyHandle = object->tpm_handle;
   return CKR_OK;
 }
 

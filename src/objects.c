@@ -28,7 +28,7 @@
 typedef struct userdata_tpm_t {
   TPM2B_PUBLIC tpm_key;
   TPM2B_NAME name;
-  PkcsObject object;
+  PkcsObject public_object, private_object;
   PkcsKey key;
   PkcsPublicKey public_key;
 } UserdataTpm, *pUserdataTpm;
@@ -109,9 +109,12 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx) {
     TPM2B_PUBLIC_KEY_RSA *rsa_key = &userdata->tpm_key.t.publicArea.unique.rsa;
     TPMS_RSA_PARMS *rsa_key_parms = &userdata->tpm_key.t.publicArea.parameters.rsaDetail;
 
-    userdata->object.id = userdata->name.t.name;
-    userdata->object.id_size = userdata->name.t.size;
-    userdata->object.class = CKO_PUBLIC_KEY;
+    userdata->public_object.id = userdata->name.t.name;
+    userdata->public_object.id_size = userdata->name.t.size;
+    userdata->public_object.class = CKO_PUBLIC_KEY;
+    userdata->private_object.id = userdata->name.t.name;
+    userdata->private_object.id_size = userdata->name.t.size;
+    userdata->private_object.class = CKO_PRIVATE_KEY;
     userdata->key.sign = CK_TRUE;
     userdata->key.decrypt = CK_TRUE;
     userdata->key.key_type = CKK_RSA;
@@ -124,13 +127,30 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx) {
     if (object == NULL)
       goto error;
 
+    object->tpm_handle = NULL;
     object->userdata = userdata;
     object->num_entries = 3;
     object->entries = calloc(object->num_entries, sizeof(AttrIndexEntry));
-    object->entries[0] = (AttrIndexEntry) attr_index_entry(&userdata->object, OBJECT_INDEX);
+    object->entries[0] = (AttrIndexEntry) attr_index_entry(&userdata->public_object, OBJECT_INDEX);
     object->entries[1] = (AttrIndexEntry) attr_index_entry(&userdata->key, KEY_INDEX);
     object->entries[2] = (AttrIndexEntry) attr_index_entry(&userdata->public_key, PUBLIC_KEY_INDEX);
     object_add(list, object);
+    pObject public_object = object;
+
+    object = malloc(sizeof(Object));
+    if (object == NULL)
+      goto error;
+
+    object->tpm_handle = persistent.data.handles.handle[i];
+    object->userdata = NULL;
+    object->num_entries = 2;
+    object->entries = calloc(object->num_entries, sizeof(AttrIndexEntry));
+    object->entries[0] = (AttrIndexEntry) attr_index_entry(&userdata->private_object, OBJECT_INDEX);
+    object->entries[1] = (AttrIndexEntry) attr_index_entry(&userdata->key, KEY_INDEX);
+    object_add(list, object);
+
+    public_object->opposite = object;
+    object->opposite = public_object;
   }
 
   return list;
