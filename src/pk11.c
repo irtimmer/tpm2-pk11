@@ -185,11 +185,11 @@ CK_RV C_Sign(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG usDataLen, 
     TPM2B_PUBLIC_KEY_RSA message = { .t.size = MAX_RSA_KEY_BYTES };
     pObject object = session->current_object->opposite;
     CK_ULONG_PTR key_size = (CK_ULONG_PTR) attr_get(object->entries, object->num_entries, CKA_MODULUS_BITS, NULL);
-    TPM_RC ret = tpm_sign_encrypt(session->context, session->keyHandle, *key_size / 8, pData, usDataLen, &message);
+    ret = tpm_sign_encrypt(session->context, session->keyHandle, *key_size / 8, pData, usDataLen, &message);
     retmem(pSignature, pusSignatureLen, message.t.buffer, message.t.size);
   } else {
     TPMT_SIGNATURE signature = {0};
-    TPM_RC ret = tpm_sign(session->context, session->keyHandle, pData, usDataLen, &signature);
+    ret = tpm_sign(session->context, session->keyHandle, pData, usDataLen, &signature);
     retmem(pSignature, pusSignatureLen, signature.signature.rsassa.sig.t.buffer, signature.signature.rsassa.sig.t.size);
   }
 
