@@ -46,7 +46,7 @@ CK_RV C_GetInfo(CK_INFO_PTR pInfo) {
 }
 
 CK_RV C_GetSlotList(CK_BBOOL tokenPresent, CK_SLOT_ID_PTR pSlotList, CK_ULONG_PTR pusCount) {
-  if (*pusCount)
+  if (*pusCount && pSlotList)
     *pSlotList = SLOT_ID;
 
   *pusCount = 1;
