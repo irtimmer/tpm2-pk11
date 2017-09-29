@@ -54,7 +54,7 @@ int config_load(char* filename, struct config *config) {
         if (strcmp(value, "socket") == 0)
           config->type = TPM_TYPE_SOCKET;
         else if (strcmp(value, "device") == 0)
-          config->type = TPM_TYPE_SOCKET;
+          config->type = TPM_TYPE_DEVICE;
         else if (strcmp(value, "tabrmd") == 0)
           config->type = TPM_TYPE_TABRMD;
     }
