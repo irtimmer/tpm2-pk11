@@ -79,6 +79,14 @@ CK_RV C_GetSessionInfo(CK_SESSION_HANDLE hSession, CK_SESSION_INFO_PTR pInfo) {
 }
 
 CK_RV C_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo) {
+  strncpy_pad(pInfo->manufacturerID, TPM2_PK11_MANUFACTURER, sizeof(pInfo->manufacturerID));
+  strncpy_pad(pInfo->slotDescription, TPM2_PK11_SLOT_DESCRIPTION, sizeof(pInfo->slotDescription));
+
+  pInfo->flags = CKF_TOKEN_PRESENT | CKF_HW_SLOT;
+  pInfo->hardwareVersion.major = 0;
+  pInfo->hardwareVersion.minor = 0;
+  pInfo->firmwareVersion.major = 0;
+  pInfo->firmwareVersion.minor = 0;
   return CKR_OK;
 }
 
@@ -101,7 +109,9 @@ CK_RV C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo) {
   pInfo->ulTotalPrivateMemory = 8;
   pInfo->ulFreePrivateMemory = 8;
   pInfo->hardwareVersion.major = 0;
+  pInfo->hardwareVersion.minor = 0;
   pInfo->firmwareVersion.major = 0;
+  pInfo->firmwareVersion.minor = 0;
 
   return CKR_OK;
 }
