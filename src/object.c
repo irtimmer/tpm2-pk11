@@ -19,22 +19,26 @@
 
 #include "object.h"
 
-void* attr_get(pAttrIndexEntry entries, size_t num_entries, CK_ATTRIBUTE_TYPE type, size_t *size) {
-  for (int i = 0; i < num_entries; i++) {
-    for (int j = 0; j < entries[i].num_attrs; j++) {
-      if (type == entries[i].indexes[j].type) {
-        if (entries[i].indexes[j].size_offset == 0) {
+void* attr_get(pObject object, CK_ATTRIBUTE_TYPE type, size_t *size) {
+  for (int i = 0; i < object->num_entries; i++) {
+    pAttrIndexEntry entries = &object->entries[i];
+    for (int j = 0; j < entries->num_attrs; j++) {
+      if (type == entries->indexes[j].type) {
+        pAttrIndex index = &entries->indexes[j];
+        if (index->size_offset == 0) {
           if (size)
-            *size = entries[i].indexes[j].size;
+            *size = index->size;
 
-          return entries[i].object + entries[i].indexes[j].offset;
+          return entries->object + index->offset;
         } else {
           if (size)
-            *size = *((size_t*) (entries[i].object + entries[i].indexes[j].size_offset));
+            *size = *((size_t*) (entries->object + index->size_offset));
 
-          return *((void**) (entries[i].object + entries[i].indexes[j].offset));
+          return *((void**) (entries->object + index->offset));
         }
       }
     }
   }
+
+  return NULL;
 }

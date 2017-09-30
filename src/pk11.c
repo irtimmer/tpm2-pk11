@@ -139,7 +139,7 @@ CK_RV C_FindObjects(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE_PTR phObject, C
     bool filtered = false;
     for (int j = 0; j < session->num_filters; j++) {
       size_t size = 0;
-      void* value = attr_get(object->entries, object->num_entries, session->filters[j].type, &size);
+      void* value = attr_get(object, session->filters[j].type, &size);
       if (session->filters[j].ulValueLen != size || memcmp(session->filters[j].pValue, value, size) != 0) {
         filtered = true;
         break;
@@ -194,7 +194,7 @@ CK_RV C_Sign(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG usDataLen, 
   if (pk11_config.sign_using_encrypt) {
     TPM2B_PUBLIC_KEY_RSA message = { .t.size = MAX_RSA_KEY_BYTES };
     pObject object = session->current_object->opposite;
-    CK_ULONG_PTR key_size = (CK_ULONG_PTR) attr_get(object->entries, object->num_entries, CKA_MODULUS_BITS, NULL);
+    CK_ULONG_PTR key_size = (CK_ULONG_PTR) attr_get(object, CKA_MODULUS_BITS, NULL);
     ret = tpm_sign_encrypt(session->context, session->keyHandle, *key_size / 8, pData, usDataLen, &message);
     retmem(pSignature, pusSignatureLen, message.t.buffer, message.t.size);
   } else {

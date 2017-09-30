@@ -39,4 +39,21 @@ typedef struct attr_index_entry_t {
   pAttrIndex indexes;
   size_t num_attrs;
 } AttrIndexEntry, *pAttrIndexEntry;
-void* attr_get(pAttrIndexEntry entries, size_t num_entries, CK_ATTRIBUTE_TYPE type, size_t *size);
+
+typedef struct attr_map_t {
+  CK_ATTRIBUTE_TYPE type;
+  unsigned int len;
+  void* value;
+  struct attr_map_t* next;
+} AttrMap, *pAttrMap;
+
+typedef struct object_t {
+  int id;
+  void* userdata;
+  pAttrIndexEntry entries;
+  size_t num_entries;
+  TPMI_DH_OBJECT tpm_handle;
+  struct object_t *opposite;
+} Object, *pObject;
+
+void* attr_get(pObject object, CK_ATTRIBUTE_TYPE type, size_t *size);
