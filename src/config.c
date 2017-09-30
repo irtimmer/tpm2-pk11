@@ -49,6 +49,9 @@ int config_load(char* filename, struct config *config) {
       } else if (strcmp(key, "device") == 0) {
         config->device = value;
         value = NULL;
+      } else if (strcmp(key, "certificates") == 0) {
+        config->certificates = value;
+        value = NULL;
       } else if (strcmp(key, "port") == 0)
         config->port = atoi(value);
       else if (strcmp(key, "sign-using-encrypt") == 0)

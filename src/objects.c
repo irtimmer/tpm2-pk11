@@ -17,15 +17,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#define _GNU_SOURCE
+
 #include "objects.h"
+#include "certificate.h"
 #include "tpm.h"
 #include "pk11.h"
 
-#define _BSD_SOURCE
-
+#include <stdio.h>
 #include <endian.h>
-
-#define NELEMS(x) (sizeof(x) / sizeof((x)[0]))
+#include <glob.h>
 
 typedef struct userdata_tpm_t {
   TPM2B_PUBLIC tpm_key;
@@ -88,7 +89,7 @@ void object_free(pObjectList list) {
   }
 }
 
-pObjectList object_load(TSS2_SYS_CONTEXT *ctx) {
+pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
   pObjectList list = malloc(sizeof(ObjectList));
   list->object = NULL;
   list->next = NULL;
@@ -153,6 +154,16 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx) {
 
     public_object->opposite = object;
     object->opposite = public_object;
+
+  glob_t results;
+  char search_path[PATH_MAX];
+  snprintf(search_path, PATH_MAX, "%s/*.der", config->certificates);
+  if (glob(search_path, GLOB_TILDE, NULL, &results) == 0) {
+    for (int i = 0; i < results.gl_pathc; i++) {
+      pObject object = certificate_read(results.gl_pathv[i]);
+      if (object)
+        object_add(list, object);
+    }
   }
 
   return list;

@@ -85,7 +85,7 @@ int session_init(struct session* session, struct config *config) {
   };
   rc = Tss2_Sys_Initialize(session->context, size, tcti_ctx, &abi_version);
 
-  session->objects = object_load(session->context);
+  session->objects = object_load(session->context, config);
 
   return 0;
 

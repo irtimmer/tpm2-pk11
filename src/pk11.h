@@ -51,3 +51,8 @@ typedef struct pkcs_public_key_t {
   CK_ULONG bits;
   uint32_t exponent;
 } PkcsPublicKey, *pPkcsPublicKey;
+
+typedef struct pkcs_x509_t {
+  char* value;
+  size_t value_size;
+} PkcsX509, *pPkcsX509;

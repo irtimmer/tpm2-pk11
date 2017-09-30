@@ -29,6 +29,7 @@ struct config {
   int type;
   char* device;
   char* hostname;
+  char* certificates;
   unsigned int port;
   bool sign_using_encrypt;
 };

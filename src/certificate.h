@@ -17,8 +17,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <stddef.h>
+#pragma once
 
-void strncpy_pad(char *dest, const char *src, size_t n);
-void retmem(void* dest, size_t* size, const void* src, size_t n);
-void* read_file(const char* filename, size_t* length);
+#include "object.h"
+
+pObject certificate_read(const char* pathname);

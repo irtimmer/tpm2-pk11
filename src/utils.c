@@ -38,7 +38,7 @@ void retmem(void* dest, size_t* size, const void* src, size_t n) {
   *size = n;
 }
 
-void* map_file(char* filename, size_t* length) {
+void* read_file(const char* filename, size_t* length) {
   int fd = open(filename, O_RDONLY);
   if (fd < 0) {
     *length = 0;
@@ -46,21 +46,21 @@ void* map_file(char* filename, size_t* length) {
   }
 
   struct stat s;
-  void *mapped = NULL;
+  char* buffer = NULL;
   int ret = fstat(fd, &s);
   if (ret < 0) {
     *length = 0;
     goto cleanup;
   }
 
+  size_t pre_length = *length;
   *length = s.st_size;
-  mapped = mmap(0, *length, PROT_READ, MAP_PRIVATE, fd, 0);
-  if (mapped == MAP_FAILED) {
+  buffer = malloc(*length + pre_length);
+  printf("Is %d, %x, %x\n", pre_length, buffer, buffer + pre_length);
+  if (buffer == NULL || read(fd, buffer + pre_length, *length) != *length)
     *length = 0;
-    goto cleanup;
-  }
 
   cleanup:
   close(fd);
-  return mapped;
+  return buffer;
 }
