@@ -19,12 +19,15 @@
 
 #include "config.h"
 
+#define _POSIX_C_SOURCE 200809L
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+#include <strings.h>
 #include <stdio.h>
 #include <stdlib.h>
 

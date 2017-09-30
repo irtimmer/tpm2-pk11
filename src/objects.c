@@ -21,6 +21,8 @@
 #include "tpm.h"
 #include "pk11.h"
 
+#define _BSD_SOURCE
+
 #include <endian.h>
 
 #define NELEMS(x) (sizeof(x) / sizeof((x)[0]))
