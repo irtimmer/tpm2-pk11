@@ -46,14 +46,14 @@ int session_init(struct session* session, struct config *config) {
   if (config->type == TPM_TYPE_SOCKET)
     rc = InitSocketTcti(NULL, &size, &socket_conf, 0);
   else if (config->type == TPM_TYPE_DEVICE)
-    rc = InitDeviceTcti(tcti_ctx, &size, 0);
+    rc = InitDeviceTcti(NULL, &size, 0);
   else
-    rc = tss2_tcti_tabrmd_init(tcti_ctx, &size);
+    rc = tss2_tcti_tabrmd_init(NULL, &size);
 
   if (rc != TSS2_RC_SUCCESS)
     goto cleanup;
 
-  tcti_ctx = (TSS2_TCTI_CONTEXT*) malloc(size);
+  tcti_ctx = (TSS2_TCTI_CONTEXT*) calloc(1, size);
   if (tcti_ctx == NULL)
     goto cleanup;
 
@@ -73,7 +73,7 @@ int session_init(struct session* session, struct config *config) {
     goto cleanup;
   
   size = Tss2_Sys_GetContextSize(0);
-  session->context = (TSS2_SYS_CONTEXT*) malloc(size);
+  session->context = (TSS2_SYS_CONTEXT*) calloc(1, size);
   if (session->context == NULL)
     goto cleanup;
 
