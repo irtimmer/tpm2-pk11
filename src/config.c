@@ -53,13 +53,14 @@ int config_load(char* filename, struct config *config) {
         config->port = atoi(value);
       else if (strcmp(key, "sign-using-encrypt") == 0)
         config->sign_using_encrypt = strcasecmp(value, "true") == 0;
-      else if (strcmp(key, "type") == 0)
+      else if (strcmp(key, "type") == 0) {
         if (strcmp(value, "socket") == 0)
           config->type = TPM_TYPE_SOCKET;
         else if (strcmp(value, "device") == 0)
           config->type = TPM_TYPE_DEVICE;
         else if (strcmp(value, "tabrmd") == 0)
           config->type = TPM_TYPE_TABRMD;
+      }
     }
     if (key != NULL)
       free(key);
@@ -71,4 +72,5 @@ int config_load(char* filename, struct config *config) {
     free(line);
 
   fclose(fd);
+  return 0;
 }

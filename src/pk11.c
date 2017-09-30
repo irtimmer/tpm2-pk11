@@ -146,7 +146,7 @@ CK_RV C_FindObjects(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE_PTR phObject, C
       }
     }
     if (!filtered) {
-      phObject[*nfound] = session->find_cursor->object;
+      phObject[*nfound] = (CK_OBJECT_HANDLE) session->find_cursor->object;
       (*nfound)++;
     }
     session->find_cursor = session->find_cursor->next;
