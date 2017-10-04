@@ -98,17 +98,22 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
     goto error;
   
   TPMS_CAPABILITY_DATA persistent;
-  tpm_list(ctx, &persistent);
+  TPM_RC rc = tpm_list(ctx, &persistent);
+  if (rc != TPM_RC_SUCCESS)
+    goto error;
+
   for (int i = 0; i < persistent.data.handles.count; i++) {
     pUserdataTpm userdata = malloc(sizeof(UserdataTpm));
-    if (userdata == NULL) {
-      free(userdata);
+    if (userdata == NULL)
       goto error;
-    }
 
     memset(userdata, 0, sizeof(UserdataTpm));
     userdata->name.t.size = sizeof(TPMU_NAME);
-    tpm_readpublic(ctx, persistent.data.handles.handle[i], &userdata->tpm_key, &userdata->name);
+    rc = tpm_readpublic(ctx, persistent.data.handles.handle[i], &userdata->tpm_key, &userdata->name);
+    if (rc != TPM_RC_SUCCESS) {
+      free(userdata);
+      goto error;
+    }
     TPM2B_PUBLIC_KEY_RSA *rsa_key = &userdata->tpm_key.t.publicArea.unique.rsa;
     TPMS_RSA_PARMS *rsa_key_parms = &userdata->tpm_key.t.publicArea.parameters.rsaDetail;
 
@@ -127,8 +132,10 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
     userdata->public_key.exponent = htobe32(rsa_key_parms->exponent == 0 ? 65537 : rsa_key_parms->exponent);
 
     pObject object = malloc(sizeof(Object));
-    if (object == NULL)
+    if (object == NULL) {
+      free(userdata);
       goto error;
+    }
 
     object->tpm_handle = NULL;
     object->userdata = userdata;
