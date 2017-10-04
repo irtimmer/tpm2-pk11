@@ -28,6 +28,8 @@
 #include <endian.h>
 #include <glob.h>
 
+#define PATH_MAX 512
+
 typedef struct userdata_tpm_t {
   TPM2B_PUBLIC tpm_key;
   TPM2B_NAME name;
