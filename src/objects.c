@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <endian.h>
+#include <limits.h>
 #include <glob.h>
 
 typedef struct userdata_tpm_t {
@@ -154,6 +155,7 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
 
     public_object->opposite = object;
     object->opposite = public_object;
+  }
 
   glob_t results;
   char search_path[PATH_MAX];
