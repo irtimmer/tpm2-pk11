@@ -21,9 +21,15 @@
 
 #include <stdlib.h>
 
+#ifdef TCTI_SOCKET_ENABLED
 #include <tcti/tcti_socket.h>
+#endif // TCTI_SOCKET_ENABLED
+#ifdef TCTI_DEVICE_ENABLED
 #include <tcti/tcti_device.h>
+#endif // TCTI_DEVICE_ENABLED
+#ifdef TCTI_TABRMD_ENABLED
 #include <tcti/tcti-tabrmd.h>
+#endif // TCTI_TABRMD_ENABLED
 
 #define DEFAULT_DEVICE "/dev/tpm0"
 #define DEFAULT_HOSTNAME "127.0.0.1"
@@ -43,12 +49,26 @@ int session_init(struct session* session, struct config *config) {
     .logData = NULL,
   };
 
-  if (config->type == TPM_TYPE_SOCKET)
-    rc = InitSocketTcti(NULL, &size, &socket_conf, 0);
-  else if (config->type == TPM_TYPE_DEVICE)
-    rc = InitDeviceTcti(NULL, &size, 0);
-  else
-    rc = tss2_tcti_tabrmd_init(NULL, &size);
+  switch(config->type) {
+#ifdef TCTI_SOCKET_ENABLED
+    case TPM_TYPE_SOCKET:
+      rc = InitSocketTcti(NULL, &size, &socket_conf, 0);
+      break;
+#endif // TCTI_SOCKET_ENABLED
+#ifdef TCTI_DEVICE_ENABLED
+    case TPM_TYPE_DEVICE:
+      rc = InitDeviceTcti(NULL, &size, 0);
+      break;
+#endif // TCTI_DEVICE_ENABLED
+#ifdef TCTI_TABRMD_ENABLED
+    case TPM_TYPE_TABRMD:
+      rc = tss2_tcti_tabrmd_init(NULL, &size);
+      break;
+#endif // TCTI_TABRMD_ENABLED
+    default:
+      rc = TSS2_TCTI_RC_NOT_IMPLEMENTED;
+      break;
+  }
 
   if (rc != TSS2_RC_SUCCESS)
     goto cleanup;
@@ -57,17 +77,32 @@ int session_init(struct session* session, struct config *config) {
   if (tcti_ctx == NULL)
     goto cleanup;
 
-  if (config->type == TPM_TYPE_SOCKET)
-    rc = InitSocketTcti(tcti_ctx, &size, &socket_conf, 0);
-  else if (config->type == TPM_TYPE_DEVICE) {
-    TCTI_DEVICE_CONF conf = {
-      .device_path = config->device != NULL ? config->device : DEFAULT_DEVICE,
-      .logCallback = NULL,
-      .logData = NULL,
-    };
-    rc = InitDeviceTcti(tcti_ctx, &size, &conf);
-  } else
-    rc = tss2_tcti_tabrmd_init(tcti_ctx, &size);
+  switch(config->type) {
+#ifdef TCTI_SOCKET_ENABLED
+    case TPM_TYPE_SOCKET:
+      rc = InitSocketTcti(tcti_ctx, &size, &socket_conf, 0);
+      break;
+#endif // TCTI_SOCKET_ENABLED
+#ifdef TCTI_DEVICE_ENABLED
+    case TPM_TYPE_DEVICE: {
+      TCTI_DEVICE_CONF conf = {
+        .device_path = config->device != NULL ? config->device : DEFAULT_DEVICE,
+        .logCallback = NULL,
+        .logData = NULL,
+      };
+      rc = InitDeviceTcti(tcti_ctx, &size, &conf);
+      break;
+    }
+#endif // TCTI_DEVICE_ENABLED
+#ifdef TCTI_TABRMD_ENABLED
+    case TPM_TYPE_TABRMD:
+      rc = tss2_tcti_tabrmd_init(tcti_ctx, &size);
+      break;
+#endif // TCTI_TABRMD_ENABLED
+    default:
+      rc = TSS2_TCTI_RC_NOT_IMPLEMENTED;
+      break;
+  }
 
   if (rc != TSS2_RC_SUCCESS)
     goto cleanup;
