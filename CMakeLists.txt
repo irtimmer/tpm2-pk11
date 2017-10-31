@@ -27,3 +27,5 @@ endif()
 if(TCTI_TABRMD_FOUND)
   target_compile_definitions(tpm2-pk11 PUBLIC TCTI_TABRMD_ENABLED=1)
 endif()
+
+install(TARGETS tpm2-pk11 DESTINATION ${CMAKE_INSTALL_LIBDIR})
