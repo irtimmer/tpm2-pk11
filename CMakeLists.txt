@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 project(TPM2_PK11 LANGUAGES C)
+include(${CMAKE_ROOT}/Modules/GNUInstallDirs.cmake)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(P11_KIT REQUIRED p11-kit-1)
