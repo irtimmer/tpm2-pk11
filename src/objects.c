@@ -99,8 +99,8 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
     goto error;
   
   TPMS_CAPABILITY_DATA persistent;
-  TPM_RC rc = tpm_list(ctx, &persistent);
-  if (rc != TPM_RC_SUCCESS)
+  TPM2_RC rc = tpm_list(ctx, &persistent);
+  if (rc != TPM2_RC_SUCCESS)
     goto error;
 
   for (int i = 0; i < persistent.data.handles.count; i++) {
@@ -111,7 +111,7 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
     memset(userdata, 0, sizeof(UserdataTpm));
     userdata->name.t.size = sizeof(TPMU_NAME);
     rc = tpm_readpublic(ctx, persistent.data.handles.handle[i], &userdata->tpm_key, &userdata->name);
-    if (rc != TPM_RC_SUCCESS) {
+    if (rc != TPM2_RC_SUCCESS) {
       free(userdata);
       goto error;
     }

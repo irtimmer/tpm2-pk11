@@ -189,10 +189,10 @@ CK_RV C_SignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJ
 
 CK_RV C_Sign(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG usDataLen, CK_BYTE_PTR pSignature, CK_ULONG_PTR pusSignatureLen) {
   struct session* session = get_session(hSession);
-  TPM_RC ret;
+  TPM2_RC ret;
 
   if (pk11_config.sign_using_encrypt) {
-    TPM2B_PUBLIC_KEY_RSA message = { .t.size = MAX_RSA_KEY_BYTES };
+    TPM2B_PUBLIC_KEY_RSA message = { .t.size = TPM2_MAX_RSA_KEY_BYTES };
     pObject object = session->current_object->opposite;
     CK_ULONG_PTR key_size = (CK_ULONG_PTR) attr_get(object, CKA_MODULUS_BITS, NULL);
     ret = tpm_sign_encrypt(session->context, session->keyHandle, *key_size / 8, pData, usDataLen, &message);
@@ -203,7 +203,7 @@ CK_RV C_Sign(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG usDataLen, 
     retmem(pSignature, pusSignatureLen, signature.signature.rsassa.sig.t.buffer, signature.signature.rsassa.sig.t.size);
   }
 
-  return ret == TPM_RC_SUCCESS ? CKR_OK : CKR_GENERAL_ERROR;
+  return ret == TPM2_RC_SUCCESS ? CKR_OK : CKR_GENERAL_ERROR;
 }
 
 CK_RV C_DecryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey) {
@@ -213,12 +213,12 @@ CK_RV C_DecryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_
 }
 
 CK_RV C_Decrypt(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncryptedData, CK_ULONG ulEncryptedDataLen, CK_BYTE_PTR pData, CK_ULONG_PTR pulDataLen) {
-  TPM2B_PUBLIC_KEY_RSA message = { .t.size = MAX_RSA_KEY_BYTES };
+  TPM2B_PUBLIC_KEY_RSA message = { .t.size = TPM2_MAX_RSA_KEY_BYTES };
   struct session* session = get_session(hSession);
-  TPM_RC ret = tpm_decrypt(session->context, session->keyHandle, pEncryptedData, ulEncryptedDataLen, &message);
+  TPM2_RC ret = tpm_decrypt(session->context, session->keyHandle, pEncryptedData, ulEncryptedDataLen, &message);
   retmem(pData, pulDataLen, message.t.buffer, message.t.size);
 
-  return ret == TPM_RC_SUCCESS ? CKR_OK : CKR_GENERAL_ERROR;
+  return ret == TPM2_RC_SUCCESS ? CKR_OK : CKR_GENERAL_ERROR;
 }
 
 CK_RV C_Initialize(CK_VOID_PTR pInitArgs) {
