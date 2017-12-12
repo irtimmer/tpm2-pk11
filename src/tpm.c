@@ -25,12 +25,9 @@ const unsigned char oid_sha1[] = {0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2B, 0x0E
 const unsigned char oid_sha256[] = {0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 0x00, 0x04, 0x20};
 
 TPM2_RC tpm_readpublic(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, TPM2B_PUBLIC *public, TPM2B_NAME *name) {
-  TPMS_AUTH_RESPONSE sessionDataOut;
-  TPMS_AUTH_RESPONSE *sessionDataOutArray[1] = {&sessionDataOut};
-
-  TSS2_SYS_RSP_AUTHS sessionsDataOut;
-  sessionsDataOut.rspAuths = &sessionDataOutArray[0];
-  sessionsDataOut.rspAuthsCount = 1;
+  TSS2L_SYS_AUTH_RESPONSE sessionsDataOut = {
+    .count = 1,
+  };
 
   TPM2B_NAME qualifiedName = { .size = sizeof(TPMU_NAME) };
 
@@ -38,20 +35,16 @@ TPM2_RC tpm_readpublic(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, TPM2B_P
 }
 
 TPM2_RC tpm_sign(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned char *hash, unsigned long hashLength, TPMT_SIGNATURE *signature) {
-  TPMS_AUTH_COMMAND sessionData = {0};
-  sessionData.sessionHandle = TPM_RS_PW;
+  TSS2L_SYS_AUTH_COMMAND sessionsData = {
+	  .count = 1,
+	  .auths[0] = {
+		  .sessionHandle = TPM2_RS_PW,
+	  },
+  };
 
-  TPMS_AUTH_RESPONSE sessionDataOut;
-  TPMS_AUTH_COMMAND *sessionDataArray[1] = {&sessionData};
-  TPMS_AUTH_RESPONSE *sessionDataOutArray[1] = {&sessionDataOut};
-
-  TSS2_SYS_CMD_AUTHS sessionsData;
-  sessionsData.cmdAuths = &sessionDataArray[0];
-  sessionsData.cmdAuthsCount = 1;
-
-  TSS2_SYS_RSP_AUTHS sessionsDataOut;
-  sessionsDataOut.rspAuths = &sessionDataOutArray[0];
-  sessionsDataOut.rspAuthsCount = 1;
+  TSS2L_SYS_AUTH_RESPONSE sessionsDataOut = {
+    .count = 1,
+  };
 
   TPMT_TK_HASHCHECK validation = {0};
   validation.tag = TPM2_ST_HASHCHECK;
@@ -78,20 +71,16 @@ TPM2_RC tpm_sign(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned char
 }
 
 TPM2_RC tpm_decrypt(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned char *cipherText, unsigned long cipherLength, TPM2B_PUBLIC_KEY_RSA *message) {
-  TPMS_AUTH_COMMAND sessionData = {0};
-  sessionData.sessionHandle = TPM_RS_PW;
+  TSS2L_SYS_AUTH_COMMAND sessionsData = {
+	  .count = 1,
+	  .auths[0] = {
+		  .sessionHandle = TPM2_RS_PW,
+	  },
+  };
 
-  TPMS_AUTH_RESPONSE sessionDataOut;
-  TPMS_AUTH_COMMAND *sessionDataArray[1] = {&sessionData};
-  TPMS_AUTH_RESPONSE *sessionDataOutArray[1] = {&sessionDataOut};
-
-  TSS2_SYS_CMD_AUTHS sessionsData;
-  sessionsData.cmdAuths = &sessionDataArray[0];
-  sessionsData.cmdAuthsCount = 1;
-
-  TSS2_SYS_RSP_AUTHS sessionsDataOut;
-  sessionsDataOut.rspAuths = &sessionDataOutArray[0];
-  sessionsDataOut.rspAuthsCount = 1;
+  TSS2L_SYS_AUTH_RESPONSE sessionsDataOut = {
+	  .count = 1,
+  };
 
   TPM2B_DATA label = {0};
 
@@ -105,13 +94,12 @@ TPM2_RC tpm_decrypt(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned c
 }
 
 TPM2_RC tpm_sign_encrypt(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, size_t key_size, unsigned char *hash, size_t hash_length, TPM2B_PUBLIC_KEY_RSA *signature) {
-  TPMS_AUTH_COMMAND sessionData = {0};
-  sessionData.sessionHandle = TPM_RS_PW;
-
-  TPMS_AUTH_COMMAND *sessionDataArray[1] = {&sessionData};
-  TSS2_SYS_CMD_AUTHS sessionsData;
-  sessionsData.cmdAuths = &sessionDataArray[0];
-  sessionsData.cmdAuthsCount = 1;
+  TSS2L_SYS_AUTH_COMMAND sessionsData = {
+	  .count = 1,
+	  .auths[0] = {
+		  .sessionHandle = TPM2_RS_PW,
+	  },
+  };
 
   TPM2B_PUBLIC_KEY_RSA message = { .size = key_size };
   unsigned char *p = message.buffer;
