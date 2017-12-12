@@ -138,7 +138,7 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
       goto error;
     }
 
-    object->tpm_handle = NULL;
+    object->tpm_handle = 0;
     object->userdata = userdata;
     object->num_entries = 3;
     object->entries = calloc(object->num_entries, sizeof(AttrIndexEntry));
