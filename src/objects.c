@@ -109,25 +109,25 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
       goto error;
 
     memset(userdata, 0, sizeof(UserdataTpm));
-    userdata->name.t.size = sizeof(TPMU_NAME);
+    userdata->name.size = sizeof(TPMU_NAME);
     rc = tpm_readpublic(ctx, persistent.data.handles.handle[i], &userdata->tpm_key, &userdata->name);
     if (rc != TPM2_RC_SUCCESS) {
       free(userdata);
       goto error;
     }
-    TPM2B_PUBLIC_KEY_RSA *rsa_key = &userdata->tpm_key.t.publicArea.unique.rsa;
-    TPMS_RSA_PARMS *rsa_key_parms = &userdata->tpm_key.t.publicArea.parameters.rsaDetail;
+    TPM2B_PUBLIC_KEY_RSA *rsa_key = &userdata->tpm_key.publicArea.unique.rsa;
+    TPMS_RSA_PARMS *rsa_key_parms = &userdata->tpm_key.publicArea.parameters.rsaDetail;
 
-    userdata->public_object.id = userdata->name.t.name;
-    userdata->public_object.id_size = userdata->name.t.size;
+    userdata->public_object.id = userdata->name.name;
+    userdata->public_object.id_size = userdata->name.size;
     userdata->public_object.class = CKO_PUBLIC_KEY;
-    userdata->private_object.id = userdata->name.t.name;
-    userdata->private_object.id_size = userdata->name.t.size;
+    userdata->private_object.id = userdata->name.name;
+    userdata->private_object.id_size = userdata->name.size;
     userdata->private_object.class = CKO_PRIVATE_KEY;
     userdata->key.sign = CK_TRUE;
     userdata->key.decrypt = CK_TRUE;
     userdata->key.key_type = CKK_RSA;
-    userdata->public_key.modulus = rsa_key->b.buffer;
+    userdata->public_key.modulus = rsa_key->buffer;
     userdata->public_key.modulus_size = rsa_key_parms->keyBits / 8;
     userdata->public_key.bits = rsa_key_parms->keyBits;
     userdata->public_key.exponent = htobe32(rsa_key_parms->exponent == 0 ? 65537 : rsa_key_parms->exponent);
