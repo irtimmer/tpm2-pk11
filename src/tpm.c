@@ -32,7 +32,7 @@ TPM2_RC tpm_readpublic(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, TPM2B_P
   sessionsDataOut.rspAuths = &sessionDataOutArray[0];
   sessionsDataOut.rspAuthsCount = 1;
 
-  TPM2B_NAME qualifiedName = { .t.size = sizeof(TPMU_NAME) };
+  TPM2B_NAME qualifiedName = { .size = sizeof(TPMU_NAME) };
 
   return Tss2_Sys_ReadPublic(context, handle, 0, public, name, &qualifiedName, &sessionsDataOut);
 }
@@ -70,9 +70,9 @@ TPM2_RC tpm_sign(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned char
   } else
     return TPM2_RC_FAILURE;
 
-  TPM2B_DIGEST digest = { .t.size = digestSize };
+  TPM2B_DIGEST digest = { .size = digestSize };
   // Remove OID from hash if provided
-  memcpy(digest.t.buffer, hash - digestSize + hashLength, hashLength);
+  memcpy(digest.buffer, hash - digestSize + hashLength, hashLength);
 
   return Tss2_Sys_Sign(context, handle, &sessionsData, &digest, &scheme, &validation, signature, &sessionsDataOut);
 }
@@ -98,8 +98,8 @@ TPM2_RC tpm_decrypt(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned c
   TPMT_RSA_DECRYPT scheme;
   scheme.scheme = TPM2_ALG_RSAES;
 
-  TPM2B_PUBLIC_KEY_RSA cipher = { .t.size = cipherLength };
-  memcpy(cipher.t.buffer, cipherText, cipherLength);
+  TPM2B_PUBLIC_KEY_RSA cipher = { .size = cipherLength };
+  memcpy(cipher.buffer, cipherText, cipherLength);
 
   return Tss2_Sys_RSA_Decrypt(context, handle, &sessionsData, &cipher, &scheme, &label, message, &sessionsDataOut);
 }
@@ -113,8 +113,8 @@ TPM2_RC tpm_sign_encrypt(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, size_
   sessionsData.cmdAuths = &sessionDataArray[0];
   sessionsData.cmdAuthsCount = 1;
 
-  TPM2B_PUBLIC_KEY_RSA message = { .t.size = key_size };
-  unsigned char *p = message.t.buffer;
+  TPM2B_PUBLIC_KEY_RSA message = { .size = key_size };
+  unsigned char *p = message.buffer;
 
   *p++ = 0;
   *p++ = 1;
