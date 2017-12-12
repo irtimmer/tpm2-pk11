@@ -57,7 +57,6 @@ void* read_file(const char* filename, size_t* length) {
   size_t pre_length = *length;
   *length = s.st_size;
   buffer = malloc(*length + pre_length);
-  printf("Is %d, %x, %x\n", pre_length, buffer, buffer + pre_length);
   if (buffer == NULL || read(fd, buffer + pre_length, *length) != *length)
     *length = 0;
 
