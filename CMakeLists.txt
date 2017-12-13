@@ -4,9 +4,9 @@ include(${CMAKE_ROOT}/Modules/GNUInstallDirs.cmake)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(P11_KIT REQUIRED p11-kit-1)
-pkg_check_modules(SAPI REQUIRED sapi)
-pkg_check_modules(TCTI_SOCKET tcti-socket)
-pkg_check_modules(TCTI_DEVICE tcti-device)
+pkg_check_modules(SAPI REQUIRED sapi>=2.0)
+pkg_check_modules(TCTI_SOCKET tcti-socket>=2.0)
+pkg_check_modules(TCTI_DEVICE tcti-device>=2.0)
 pkg_check_modules(TCTI_TABRMD tcti-tabrmd)
 
 if(NOT TCTI_SOCKET_FOUND AND NOT TCTI_DEVICE_FOUND AND NOT TCTI_TABRMD_FOUND)
