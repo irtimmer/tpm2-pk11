@@ -100,7 +100,7 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
 
   if (list == NULL)
     goto error;
-  
+
   TPMS_CAPABILITY_DATA persistent;
   TPM2_RC rc = tpm_list(ctx, &persistent);
   if (rc != TPM2_RC_SUCCESS)
@@ -165,6 +165,17 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
 
     public_object->opposite = object;
     object->opposite = public_object;
+  }
+
+  TPMS_CAPABILITY_DATA nvlist;
+  rc = tpm_nvlist(ctx, &nvlist);
+  if (rc != TPM2_RC_SUCCESS)
+    goto error;
+
+  for (int i = 0; i < nvlist.data.handles.count; i++) {
+    pObject object = certificate_read_from_tpm(ctx, nvlist.data.handles.handle[i]);
+    if (object)
+      object_add(list, object);
   }
 
   if (config->certificates) {
