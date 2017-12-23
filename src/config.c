@@ -33,15 +33,15 @@
 #include <stdlib.h>
 
 int config_load(char* filename, struct config *config) {
-  FILE* fd = fopen(filename, "r");
+  FILE* file = fopen(filename, "r");
 
-  if (fd == NULL)
+  if (file == NULL)
     return -ENOENT;
 
   char *line = NULL;
   size_t len = 0;
 
-  while (getline(&line, &len, fd) != -1) {
+  while (getline(&line, &len, file) != -1) {
     char *key = NULL, *value = NULL;
     if (sscanf(line, "%ms %m[^\n]", &key, &value) == 2) {
       if (strcmp(key, "hostname") == 0) {
@@ -80,6 +80,6 @@ int config_load(char* filename, struct config *config) {
   if (line != NULL)
     free(line);
 
-  fclose(fd);
+  fclose(file);
   return 0;
 }
