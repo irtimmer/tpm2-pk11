@@ -24,6 +24,7 @@
 #include "utils.h"
 #include "tpm.h"
 #include "object.h"
+#include "log.h"
 
 #include <sys/mman.h>
 #include <string.h>
@@ -228,6 +229,7 @@ CK_RV C_Initialize(CK_VOID_PTR pInitArgs) {
   if (config_load(configfile_path, &pk11_config) < 0)
     return CKR_GENERAL_ERROR;
 
+  log_init(pk11_config.log_file, pk11_config.log_level);
   return CKR_OK;
 }
 

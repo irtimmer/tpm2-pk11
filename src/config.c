@@ -18,6 +18,7 @@
  */
 
 #include "config.h"
+#include "log.h"
 
 #define _POSIX_C_SOURCE 200809L
 
@@ -56,7 +57,12 @@ int config_load(char* filename, struct config *config) {
         config->port = atoi(value);
       else if (strcmp(key, "sign-using-encrypt") == 0)
         config->sign_using_encrypt = strcasecmp(value, "true") == 0;
-      else if (strcmp(key, "type") == 0) {
+      else if (strcmp(key, "log-level") == 0)
+        config->log_level = atoi(value);
+      else if (strcmp(key, "log") == 0) {
+        config->log_file = value;
+        value = NULL;
+      } else if (strcmp(key, "type") == 0) {
         if (strcmp(value, "socket") == 0)
           config->type = TPM_TYPE_SOCKET;
         else if (strcmp(value, "device") == 0)

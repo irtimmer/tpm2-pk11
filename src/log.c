@@ -17,23 +17,35 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#pragma once
+#include "log.h"
 
-#include <stdbool.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
+#include <unistd.h>
 
-#define TPM_TYPE_DEVICE 0
-#define TPM_TYPE_SOCKET 1
-#define TPM_TYPE_TABRMD 2
+static int log_level = NONE;
+static FILE* log_stream = NULL;
 
-struct config {
-  int type;
-  char* device;
-  char* hostname;
-  char* certificates;
-  char* log_file;
-  int log_level;
-  unsigned int port;
-  bool sign_using_encrypt;
-};
+void log_init(char* filename, int level) {
+  log_level = level;
+  if (filename != NULL) {
+    if (strcmp(filename, "stdout") == 0)
+      log_stream = stdout;
+    else if (strcmp(filename, "stderr") == 0)
+      log_stream = stderr;
+    else
+      log_stream = fopen(filename, "w");
+  }
+}
 
-int config_load(char* filename, struct config *config);
+void print_log(int level, const char* format, ...) {
+  if (log_stream != NULL && level <= log_level) {
+    va_list args;
+    va_start(args, format);
+    fprintf(log_stream, "[tpm-pk11] ");
+    vfprintf(log_stream, format, args);
+    fprintf(log_stream, "\n");
+    va_end(args);
+  }
+}

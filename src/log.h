@@ -17,23 +17,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#pragma once
+#define NONE 0
+#define INFO 1
+#define VERBOSE 2
+#define DEBUG 3
 
-#include <stdbool.h>
-
-#define TPM_TYPE_DEVICE 0
-#define TPM_TYPE_SOCKET 1
-#define TPM_TYPE_TABRMD 2
-
-struct config {
-  int type;
-  char* device;
-  char* hostname;
-  char* certificates;
-  char* log_file;
-  int log_level;
-  unsigned int port;
-  bool sign_using_encrypt;
-};
-
-int config_load(char* filename, struct config *config);
+void log_init(char* filename, int level);
+void print_log(int level, const char* format, ...);
