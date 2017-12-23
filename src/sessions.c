@@ -31,6 +31,16 @@
 #include <tcti/tcti-tabrmd.h>
 #endif // TCTI_TABRMD_ENABLED
 
+#ifndef TCTI_DEVICE_ENABLED
+#define InitDeviceTcti(tcti_ctx, size, conf) (TSS2_TCTI_RC_NOT_IMPLEMENTED)
+#endif
+#ifndef TCTI_SOCKET_ENABLED
+#define InitSocketTcti(tcti_ctx, size, conf) (TSS2_TCTI_RC_NOT_IMPLEMENTED)
+#endif
+#ifndef TCTI_TABRMD_ENABLED
+#define tss2_tcti_tabrmd_init(tcti_ctx, size) (TSS2_TCTI_RC_NOT_IMPLEMENTED)
+#endif
+
 #define DEFAULT_DEVICE "/dev/tpm0"
 #define DEFAULT_HOSTNAME "127.0.0.1"
 #define DEFAULT_PORT 2323
@@ -50,21 +60,15 @@ int session_init(struct session* session, struct config *config) {
   };
 
   switch(config->type) {
-#ifdef TCTI_SOCKET_ENABLED
     case TPM_TYPE_SOCKET:
       rc = InitSocketTcti(NULL, &size, &socket_conf, 0);
       break;
-#endif // TCTI_SOCKET_ENABLED
-#ifdef TCTI_DEVICE_ENABLED
     case TPM_TYPE_DEVICE:
       rc = InitDeviceTcti(NULL, &size, 0);
       break;
-#endif // TCTI_DEVICE_ENABLED
-#ifdef TCTI_TABRMD_ENABLED
     case TPM_TYPE_TABRMD:
       rc = tss2_tcti_tabrmd_init(NULL, &size);
       break;
-#endif // TCTI_TABRMD_ENABLED
     default:
       rc = TSS2_TCTI_RC_NOT_IMPLEMENTED;
       break;
@@ -78,12 +82,9 @@ int session_init(struct session* session, struct config *config) {
     goto cleanup;
 
   switch(config->type) {
-#ifdef TCTI_SOCKET_ENABLED
     case TPM_TYPE_SOCKET:
       rc = InitSocketTcti(tcti_ctx, &size, &socket_conf, 0);
       break;
-#endif // TCTI_SOCKET_ENABLED
-#ifdef TCTI_DEVICE_ENABLED
     case TPM_TYPE_DEVICE: {
       TCTI_DEVICE_CONF conf = {
         .device_path = config->device != NULL ? config->device : DEFAULT_DEVICE,
@@ -93,12 +94,9 @@ int session_init(struct session* session, struct config *config) {
       rc = InitDeviceTcti(tcti_ctx, &size, &conf);
       break;
     }
-#endif // TCTI_DEVICE_ENABLED
-#ifdef TCTI_TABRMD_ENABLED
     case TPM_TYPE_TABRMD:
       rc = tss2_tcti_tabrmd_init(tcti_ctx, &size);
       break;
-#endif // TCTI_TABRMD_ENABLED
     default:
       rc = TSS2_TCTI_RC_NOT_IMPLEMENTED;
       break;
