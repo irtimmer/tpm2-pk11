@@ -23,6 +23,7 @@
 #include "objects.h"
 #include "pk11.h"
 #include "utils.h"
+#include "tpm.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -69,6 +70,43 @@ pObject certificate_read(const char* pathname) {
 
   userdata->certificate.value_size = size;
   userdata->certificate.value = ((char*) userdata) + sizeof(UserdataCertificate);
+
+  object->userdata = userdata;
+  object->num_entries = 2;
+  object->entries = calloc(object->num_entries, sizeof(AttrIndexEntry));
+  object->entries[0] = (AttrIndexEntry) attr_index_entry(&userdata->object, OBJECT_INDEX);
+  object->entries[1] = (AttrIndexEntry) attr_index_entry(&userdata->certificate, CERTIFICATE_INDEX);
+
+  return object;
+}
+
+pObject certificate_read_from_tpm(TSS2_SYS_CONTEXT *context, TPMI_RH_NV_INDEX index) {
+  pObject object = malloc(sizeof(Object));
+  if (!object)
+    return NULL;
+
+  /* max size of a TPM object in the nvram is TPM2_MAX_NV_BUFFER_SIZE bytes */
+  size_t size = TPM2_MAX_NV_BUFFER_SIZE;
+  unsigned char *data = malloc(size + sizeof(UserdataCertificate));
+  if (!data) {
+    free(object);
+    return NULL;
+  }
+
+  TPM2_RC rc = tpm_nvread(context, index, data + sizeof(UserdataCertificate), &size);
+  if (rc != TPM2_RC_SUCCESS) {
+    free(object);
+    free(data);
+    return NULL;
+  }
+
+  pUserdataCertificate userdata = (pUserdataCertificate) data;
+  userdata->object.class = CKO_CERTIFICATE;
+  userdata->object.id = userdata->id;
+  userdata->object.id_size = 0;
+
+  userdata->certificate.value_size = size;
+  userdata->certificate.value = data + sizeof(UserdataCertificate);
 
   object->userdata = userdata;
   object->num_entries = 2;

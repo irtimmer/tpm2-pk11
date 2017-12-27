@@ -24,3 +24,6 @@ TPM2_RC tpm_sign(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned char
 TPM2_RC tpm_decrypt(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned char *cipher_text, unsigned long cipher_length, TPM2B_PUBLIC_KEY_RSA *message);
 TPM2_RC tpm_sign_encrypt(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, size_t key_size, unsigned char *message, size_t message_length, TPM2B_PUBLIC_KEY_RSA *signature);
 TPM2_RC tpm_list(TSS2_SYS_CONTEXT *context, TPMS_CAPABILITY_DATA* capability_data);
+TPM2_RC tpm_nvlist(TSS2_SYS_CONTEXT *context, TPMS_CAPABILITY_DATA* capability_data);
+TPM2_RC tpm_nvreadpublic(TSS2_SYS_CONTEXT *context, TPMI_RH_NV_INDEX index, TPM2B_NV_PUBLIC *nvpublic);
+TPM2_RC tpm_nvread(TSS2_SYS_CONTEXT *context, TPMI_RH_NV_INDEX index, void *data, unsigned long *size);

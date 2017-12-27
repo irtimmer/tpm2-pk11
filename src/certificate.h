@@ -20,5 +20,7 @@
 #pragma once
 
 #include "object.h"
+#include "tpm.h"
 
 pObject certificate_read(const char* pathname);
+pObject certificate_read_from_tpm(TSS2_SYS_CONTEXT *context, TPMI_RH_NV_INDEX index);

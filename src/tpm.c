@@ -24,6 +24,11 @@
 const unsigned char oid_sha1[] = {0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2B, 0x0E, 0x03, 0x02, 0x1A, 0x05, 0x00, 0x04, 0x14};
 const unsigned char oid_sha256[] = {0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 0x00, 0x04, 0x20};
 
+#define BUFFER_SIZE(type, field) (sizeof((((type *)NULL)->field)))
+#define TPM2B_TYPE_INIT(type, field) { .size = BUFFER_SIZE(type, field), }
+#define TPM2B_INIT(xsize) { .size = xsize, }
+#define TPM2B_EMPTY_INIT TPM2B_INIT(0)
+
 TPM2_RC tpm_readpublic(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, TPM2B_PUBLIC *public, TPM2B_NAME *name) {
   TSS2L_SYS_AUTH_RESPONSE sessions_data_out = { .count = 1 };
 
@@ -110,4 +115,48 @@ TPM2_RC tpm_list(TSS2_SYS_CONTEXT *context, TPMS_CAPABILITY_DATA* capability_dat
   TPMI_YES_NO more_data;
 
   return Tss2_Sys_GetCapability(context, 0, TPM2_CAP_HANDLES, htobe32(TPM2_HT_PERSISTENT), TPM2_PT_TPM2_HR_PERSISTENT, &more_data, capability_data, 0);
+}
+
+TPM2_RC tpm_nvreadpublic(TSS2_SYS_CONTEXT *context, TPMI_RH_NV_INDEX index, TPM2B_NV_PUBLIC *nvpublic) {
+  TPM2B_NAME nvname = TPM2B_TYPE_INIT(TPM2B_NAME, name);
+
+  return Tss2_Sys_NV_ReadPublic(context, index, NULL, nvpublic, &nvname, NULL);
+}
+
+TPM2_RC tpm_nvlist(TSS2_SYS_CONTEXT *context, TPMS_CAPABILITY_DATA* capability_data) {
+  TPMI_YES_NO moreData;
+
+  return Tss2_Sys_GetCapability(context, 0, TPM2_CAP_HANDLES, htobe32(TPM2_HT_NV_INDEX), TPM2_PT_NV_INDEX_MAX, &moreData, capability_data, 0);
+}
+
+TPM2_RC tpm_nvread(TSS2_SYS_CONTEXT *context, TPMI_RH_NV_INDEX index, void *data, unsigned long *size) {
+  if (!size)
+    return TPM2_RC_FAILURE;
+
+  TPM2B_NV_PUBLIC nvpublic = TPM2B_EMPTY_INIT;
+
+  TPM2_RC rc = tpm_nvreadpublic(context, index, &nvpublic);
+  if (rc != TPM2_RC_SUCCESS)
+    return rc;
+  if (*size <= nvpublic.nvPublic.dataSize) {
+    *size = nvpublic.nvPublic.dataSize;
+    return TPM2_RC_SIZE;
+  }
+  *size = nvpublic.nvPublic.dataSize;
+
+  if (!data)
+    return TPM2_RC_SUCCESS;
+
+  TPM2B_MAX_NV_BUFFER nvdata = TPM2B_TYPE_INIT(TPM2B_MAX_NV_BUFFER, buffer);
+  TSS2L_SYS_AUTH_COMMAND sessions_data = {
+    .count = 1,
+    .auths[0] = { .sessionHandle = TPM2_RS_PW },
+  };
+  TSS2L_SYS_AUTH_RESPONSE sessions_data_out = { .count = 1 };
+
+  rc = Tss2_Sys_NV_Read(context, TPM2_RH_OWNER, index, &sessions_data, *size, 0, &nvdata, &sessions_data_out);
+  if (rc == TPM2_RC_SUCCESS) {
+    memcpy(data, &nvdata.buffer, nvdata.size);
+  }
+  return rc;
 }
