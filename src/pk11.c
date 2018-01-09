@@ -105,7 +105,7 @@ CK_RV C_GetTokenInfo(CK_SLOT_ID id, CK_TOKEN_INFO_PTR info) {
   strncpy_pad(info->serialNumber, TPM2_PK11_SERIAL, sizeof(info->serialNumber));
   strncpy_pad(info->utcTime, "", sizeof(info->utcTime));
 
-  info->flags = CKF_TOKEN_INITIALIZED;
+  info->flags = CKF_TOKEN_INITIALIZED | CKF_WRITE_PROTECTED;
   info->ulMaxSessionCount = 1;
   info->ulSessionCount = 0;
   info->ulMaxRwSessionCount = 1;
