@@ -46,11 +46,14 @@ typedef struct pkcs_key_t {
 } PkcsKey, *pPkcsKey;
 
 typedef struct pkcs_public_key_t {
+  uint32_t exponent;
+} PkcsPublicKey, *pPkcsPublicKey;
+
+typedef struct pkcs_modulus_t {
   void* modulus;
   size_t modulus_size;
   CK_ULONG bits;
-  uint32_t exponent;
-} PkcsPublicKey, *pPkcsPublicKey;
+} PkcsModulus, *pPkcsModulus;
 
 typedef struct pkcs_x509_t {
   char* value;

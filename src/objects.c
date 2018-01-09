@@ -38,6 +38,7 @@ typedef struct userdata_tpm_t {
   PkcsObject public_object, private_object;
   PkcsKey key;
   PkcsPublicKey public_key;
+  PkcsModulus modulus;
 } UserdataTpm, *pUserdataTpm;
 
 static AttrIndex OBJECT_INDEX[] = {
@@ -52,9 +53,12 @@ static AttrIndex KEY_INDEX[] = {
 };
 
 static AttrIndex PUBLIC_KEY_INDEX[] = {
-  attr_dynamic_index_of(CKA_MODULUS, PkcsPublicKey, modulus, modulus_size),
-  attr_index_of(CKA_MODULUS_BITS, PkcsPublicKey, bits),
   attr_index_of(CKA_PUBLIC_EXPONENT, PkcsPublicKey, exponent)
+};
+
+static AttrIndex MODULUS_INDEX[] = {
+  attr_dynamic_index_of(CKA_MODULUS, PkcsModulus, modulus, modulus_size),
+  attr_index_of(CKA_MODULUS_BITS, PkcsModulus, bits),
 };
 
 pObject object_get(pObjectList list, int id) {
@@ -130,9 +134,9 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
     userdata->key.sign = CK_TRUE;
     userdata->key.decrypt = CK_TRUE;
     userdata->key.key_type = CKK_RSA;
-    userdata->public_key.modulus = rsa_key->buffer;
-    userdata->public_key.modulus_size = rsa_key_parms->keyBits / 8;
-    userdata->public_key.bits = rsa_key_parms->keyBits;
+    userdata->modulus.modulus = rsa_key->buffer;
+    userdata->modulus.modulus_size = rsa_key_parms->keyBits / 8;
+    userdata->modulus.bits = rsa_key_parms->keyBits;
     userdata->public_key.exponent = htobe32(rsa_key_parms->exponent == 0 ? 65537 : rsa_key_parms->exponent);
 
     pObject object = malloc(sizeof(Object));
@@ -143,11 +147,12 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
 
     object->tpm_handle = 0;
     object->userdata = userdata;
-    object->num_entries = 3;
+    object->num_entries = 4;
     object->entries = calloc(object->num_entries, sizeof(AttrIndexEntry));
     object->entries[0] = (AttrIndexEntry) attr_index_entry(&userdata->public_object, OBJECT_INDEX);
     object->entries[1] = (AttrIndexEntry) attr_index_entry(&userdata->key, KEY_INDEX);
     object->entries[2] = (AttrIndexEntry) attr_index_entry(&userdata->public_key, PUBLIC_KEY_INDEX);
+    object->entries[3] = (AttrIndexEntry) attr_index_entry(&userdata->modulus, MODULUS_INDEX);
     object_add(list, object);
     pObject public_object = object;
 
@@ -157,10 +162,11 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
 
     object->tpm_handle = persistent.data.handles.handle[i];
     object->userdata = NULL;
-    object->num_entries = 2;
+    object->num_entries = 3;
     object->entries = calloc(object->num_entries, sizeof(AttrIndexEntry));
     object->entries[0] = (AttrIndexEntry) attr_index_entry(&userdata->private_object, OBJECT_INDEX);
     object->entries[1] = (AttrIndexEntry) attr_index_entry(&userdata->key, KEY_INDEX);
+    object->entries[2] = (AttrIndexEntry) attr_index_entry(&userdata->modulus, MODULUS_INDEX);
     object_add(list, object);
 
     public_object->opposite = object;
