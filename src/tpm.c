@@ -23,6 +23,8 @@
 
 const unsigned char oid_sha1[] = {0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2B, 0x0E, 0x03, 0x02, 0x1A, 0x05, 0x00, 0x04, 0x14};
 const unsigned char oid_sha256[] = {0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 0x00, 0x04, 0x20};
+const unsigned char oid_sha384[] = {0x30, 0x41, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86,0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x02, 0x05,0x00, 0x04, 0x30};
+const unsigned char oid_sha512[] = {0x30, 0x51, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86,0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x03, 0x05,0x00, 0x04, 0x40};
 
 TPM2_RC tpm_readpublic(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, TPM2B_PUBLIC *public, TPM2B_NAME *name) {
   TSS2L_SYS_AUTH_RESPONSE sessions_data_out = { .count = 1 };
@@ -48,12 +50,18 @@ TPM2_RC tpm_sign(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned char
   scheme.scheme = TPM2_ALG_RSASSA;
 
   int digestSize;
-  if (memcmp(hash, oid_sha1, sizeof(oid_sha1)) == 0) {
+  if (sizeof(oid_sha1) < hash_length && memcmp(hash, oid_sha1, sizeof(oid_sha1)) == 0) {
     scheme.details.rsassa.hashAlg = TPM2_ALG_SHA1;
     digestSize = TPM2_SHA1_DIGEST_SIZE;
-  } else if (memcmp(hash, oid_sha256, sizeof(oid_sha256)) == 0) {
+  } else if (sizeof(oid_sha256) < hash_length && memcmp(hash, oid_sha256, sizeof(oid_sha256)) == 0) {
     scheme.details.rsassa.hashAlg = TPM2_ALG_SHA256;
     digestSize = TPM2_SHA256_DIGEST_SIZE;
+  } else if (sizeof(oid_sha384) < hash_length && memcmp(hash, oid_sha384, sizeof(oid_sha384)) == 0) {
+    scheme.details.rsassa.hashAlg = TPM2_ALG_SHA384;
+    digestSize = TPM2_SHA384_DIGEST_SIZE;
+  } else if (sizeof(oid_sha512) < hash_length && memcmp(hash, oid_sha512, sizeof(oid_sha512)) == 0) {
+    scheme.details.rsassa.hashAlg = TPM2_ALG_SHA512;
+    digestSize = TPM2_SHA512_DIGEST_SIZE;
   } else
     return TPM2_RC_FAILURE;
 
