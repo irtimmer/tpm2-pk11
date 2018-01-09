@@ -36,6 +36,8 @@
 typedef struct pkcs_object_t {
   void* id;
   size_t id_size;
+  char* label;
+  size_t label_size;
   CK_OBJECT_CLASS class;
 } PkcsObject, *pPkcsObject;
 
