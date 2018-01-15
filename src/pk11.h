@@ -60,4 +60,5 @@ typedef struct pkcs_modulus_t {
 typedef struct pkcs_x509_t {
   char* value;
   size_t value_size;
+  CK_CERTIFICATE_TYPE cert_type;
 } PkcsX509, *pPkcsX509;

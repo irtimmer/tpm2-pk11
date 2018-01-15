@@ -42,6 +42,7 @@ static AttrIndex OBJECT_INDEX[] = {
 
 static AttrIndex CERTIFICATE_INDEX[] = {
   attr_dynamic_index_of(CKA_VALUE, PkcsX509, value, value_size),
+  attr_index_of(CKA_CERTIFICATE_TYPE, PkcsX509, cert_type),
 };
 
 pObject certificate_read(const char* pathname) {
@@ -69,6 +70,7 @@ pObject certificate_read(const char* pathname) {
 
   userdata->certificate.value_size = size;
   userdata->certificate.value = ((char*) userdata) + sizeof(UserdataCertificate);
+  userdata->certificate.cert_type = CKC_X_509;
 
   object->userdata = userdata;
   object->num_entries = 2;
