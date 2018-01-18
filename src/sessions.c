@@ -44,9 +44,6 @@ int session_init(struct session* session, struct config *config) {
   TCTI_SOCKET_CONF socket_conf = {
     .hostname = config->hostname != NULL ? config->hostname : DEFAULT_HOSTNAME,
     .port = config->port > 0 ? config->port : DEFAULT_PORT,
-    .logCallback = NULL,
-    .logBufferCallback = NULL,
-    .logData = NULL,
   };
 
   switch(config->type) {
@@ -87,8 +84,6 @@ int session_init(struct session* session, struct config *config) {
     case TPM_TYPE_DEVICE: {
       TCTI_DEVICE_CONF conf = {
         .device_path = config->device != NULL ? config->device : DEFAULT_DEVICE,
-        .logCallback = NULL,
-        .logData = NULL,
       };
       rc = InitDeviceTcti(tcti_ctx, &size, &conf);
       break;
