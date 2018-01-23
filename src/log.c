@@ -35,7 +35,7 @@ void log_init(char* filename, int level) {
     else if (strcmp(filename, "stderr") == 0)
       log_stream = stderr;
     else
-      log_stream = fopen(filename, "w");
+      log_stream = fopen(filename, "a");
   }
 }
 
