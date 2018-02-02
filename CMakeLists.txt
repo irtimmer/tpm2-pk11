@@ -13,6 +13,9 @@ if(NOT TCTI_SOCKET_FOUND AND NOT TCTI_DEVICE_FOUND AND NOT TCTI_TABRMD_FOUND)
   message(FATAL_ERROR "At least one connection type must be enabled")
 endif()
 
+if (TCTI_SOCKET_FOUND)
+	message("found a socket")
+endif()
 aux_source_directory(./src SRC_LIST)
 
 add_library(tpm2-pk11 SHARED ${SRC_LIST})
