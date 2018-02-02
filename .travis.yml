@@ -1,0 +1,32 @@
+language: c
+compiler:
+  - gcc
+  - clang-3.8
+
+sudo: required
+dist: trusty
+
+addons:
+  apt:
+    packages:
+    - cmake
+    - libp11-kit-dev
+    - liburiparser-dev
+    - clang-3.8
+
+install:
+  - wget http://ftpmirror.gnu.org/autoconf-archive/autoconf-archive-2017.09.28.tar.xz
+  - sha256sum autoconf-archive-2017.09.28.tar.xz | grep -q 5c9fb5845b38b28982a3ef12836f76b35f46799ef4a2e46b48e2bd3c6182fa01
+  - tar xJf autoconf-archive-2017.09.28.tar.xz && pushd autoconf-archive-2017.09.28
+  - ./configure --prefix=/usr && make -j$(nproc) && sudo make install
+  - popd
+  - git clone https://github.com/tpm2-software/tpm2-tss.git
+  - pushd tpm2-tss
+  - ./bootstrap && ./configure && make -j$(nproc)
+  - sudo make install
+  - popd
+
+script:
+  - mkdir build
+  - pushd build
+  - cmake .. && make
