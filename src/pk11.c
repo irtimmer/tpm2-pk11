@@ -73,7 +73,7 @@ CK_RV C_GetSlotList(CK_BBOOL present, CK_SLOT_ID_PTR list, CK_ULONG_PTR count) {
 
 CK_RV C_OpenSession(CK_SLOT_ID id, CK_FLAGS flags, CK_VOID_PTR application, CK_NOTIFY notify, CK_SESSION_HANDLE_PTR session) {
   print_log(VERBOSE, "C_OpenSession: id = %d, flags = %x", id, flags);
-  *session = (unsigned long) malloc(sizeof(struct session));
+  *session = (unsigned long) calloc(1, sizeof(struct session));
   if ((void*) *session == NULL)
     return CKR_GENERAL_ERROR;
 
@@ -295,6 +295,7 @@ CK_RV C_Initialize(CK_VOID_PTR pInitArgs) {
   if (config_load(configfile_path, &pk11_config) < 0)
     return CKR_GENERAL_ERROR;
 
+  memset(&main_session, 0, sizeof(main_session));
   session_init(&main_session, &pk11_config);
   log_init(pk11_config.log_file, pk11_config.log_level);
   return CKR_OK;
