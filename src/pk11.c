@@ -172,21 +172,34 @@ CK_RV C_FindObjectsFinal(CK_SESSION_HANDLE session_handle) {
 }
 
 CK_RV C_GetAttributeValue(CK_SESSION_HANDLE session_handle, CK_OBJECT_HANDLE object_handle, CK_ATTRIBUTE_PTR template, CK_ULONG count) {
-  print_log(VERBOSE, "C_FindObjects: session = %x, object = %x, count = %d", session_handle, object_handle, count);
+  print_log(VERBOSE, "C_GetAttributeValue: session = %x, object = %x, count = %d", session_handle, object_handle, count);
   pObject object = (pObject) object_handle;
 
   for (int i = 0; i < count; i++) {
+    void* entry_obj = NULL;
+    pAttrIndex entry = NULL;
     for (int j = 0; j < object->num_entries; j++) {
       void *obj = object->entries[j].object;
       pAttrIndex index = object->entries[j].indexes;
       for (int k = 0; k < object->entries[j].num_attrs; k++) {
         if (template[i].type == index[k].type) {
-          if (index[k].size_offset == 0)
-            retmem(template[i].pValue, &template[i].ulValueLen, obj + index[k].offset, index[k].size);
-          else
-            retmem(template[i].pValue, &template[i].ulValueLen, *((void**) (obj + index[k].offset)), *((size_t*) (obj + index[k].size_offset)));
+          entry = &index[k];
+          entry_obj = obj;
+          continue;
         }
       }
+      if (entry)
+        continue;
+    }
+    if (!entry) {
+      print_log(DEBUG, " attribute not found: type = %x", template[i].type);
+      template[i].ulValueLen = 0;
+    } else if (entry->size_offset == 0) {
+      print_log(DEBUG, " return attribute: type = %x, size = %d, buffer_size = %d", template[i].type, entry->size, template[i].ulValueLen);
+      retmem(template[i].pValue, &template[i].ulValueLen, entry_obj + entry->offset, entry->size);
+    } else {
+      print_log(DEBUG, " return attribute: type = %x, size = %d, buffer_size = %d", template[i].type, *((size_t*) (entry_obj + entry->size_offset)), template[i].ulValueLen);
+      retmem(template[i].pValue, &template[i].ulValueLen, *((void**) (entry_obj + entry->offset)), *((size_t*) (entry_obj + entry->size_offset)));
     }
   }
 
