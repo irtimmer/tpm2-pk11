@@ -25,11 +25,14 @@
 #include <string.h>
 #include <stdlib.h>
 
-void strncpy_pad(char *dest, const char *src, size_t n) {
-  size_t len = strlen(src);
-  memcpy(dest, src, len < n ? len : n);
-  if (len < n)
-    memset(dest + len, ' ', n - len);
+void strncpy_pad(char *dest, size_t dest_len, const char *src, size_t n) {
+  size_t src_len = strlen(src);
+  if (src_len > n)
+    src_len = n;
+
+  memcpy(dest, src, src_len < dest_len ? src_len : dest_len);
+  if (src_len < dest_len)
+    memset(dest + src_len, ' ', dest_len - src_len);
 }
 
 void retmem(void* dest, size_t* size, const void* src, size_t n) {

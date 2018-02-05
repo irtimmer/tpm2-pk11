@@ -113,7 +113,7 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
     goto error;
   
   TPMS_CAPABILITY_DATA persistent;
-  TPM2_RC rc = tpm_list(ctx, &persistent);
+  TPM2_RC rc = tpm_info(ctx, TPM2_HT_PERSISTENT, &persistent);
   if (rc != TPM2_RC_SUCCESS)
     goto error;
 

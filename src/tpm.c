@@ -114,8 +114,32 @@ TPM2_RC tpm_sign_encrypt(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, size_
   return Tss2_Sys_RSA_Decrypt(context, handle, &sessions_data, &message, &scheme, &label, signature, NULL);
 }
 
-TPM2_RC tpm_list(TSS2_SYS_CONTEXT *context, TPMS_CAPABILITY_DATA* capability_data) {
+TPM2_RC tpm_info(TSS2_SYS_CONTEXT *context, UINT32 property, TPMS_CAPABILITY_DATA* capability_data) {
   TPMI_YES_NO more_data;
+  TPM2_CAP capability;
+  UINT32 propertyCount;
 
-  return Tss2_Sys_GetCapability(context, 0, TPM2_CAP_HANDLES, htobe32(TPM2_HT_PERSISTENT), TPM2_PT_TPM2_HR_PERSISTENT, &more_data, capability_data, 0);
+  switch (property) {
+    case TPM2_HT_PERSISTENT:
+      property = htobe32(property);
+      capability = TPM2_CAP_HANDLES;
+      propertyCount = TPM2_PT_TPM2_HR_PERSISTENT;
+      break;
+    case TPM2_PT_FIXED:
+      capability = TPM2_CAP_TPM_PROPERTIES;
+      propertyCount = TPM2_MAX_TPM_PROPERTIES;
+      break;
+  }
+  
+  return Tss2_Sys_GetCapability(context, 0, capability, property, propertyCount, &more_data, capability_data, 0);
+}
+
+TPMS_TAGGED_PROPERTY* tpm_info_get(TPMS_TAGGED_PROPERTY properties[], size_t count, TPM2_PT key) {
+  for (int i = 0; i < count; i++) {
+    if (properties[i].property == key)
+      return &properties[i];
+
+  }
+
+  return NULL;
 }

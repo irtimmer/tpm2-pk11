@@ -34,5 +34,7 @@ struct session {
   pObject current_object;
 };
 
+extern unsigned int open_sessions;
+
 int session_init(struct session* session, struct config *config);
 void session_close(struct session* session);

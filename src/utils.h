@@ -19,6 +19,6 @@
 
 #include <stddef.h>
 
-void strncpy_pad(char *dest, const char *src, size_t n);
+void strncpy_pad(char *dest, size_t dest_len, const char *src, size_t n);
 void retmem(void* dest, size_t* size, const void* src, size_t n);
 void* read_file(const char* filename, size_t* length);

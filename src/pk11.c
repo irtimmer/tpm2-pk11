@@ -29,19 +29,21 @@
 #include <sys/mman.h>
 #include <string.h>
 #include <stdio.h>
+#include <endian.h>
 
 #define SLOT_ID 0x1234
 
 #define get_session(x) ((struct session*) x)
 
 static struct config pk11_config = {0};
+static struct session main_session;
 
 CK_RV C_GetInfo(CK_INFO_PTR info) {
   print_log(VERBOSE, "C_GetInfo");
   info->cryptokiVersion.major = CRYPTOKI_VERSION_MAJOR;
   info->cryptokiVersion.minor = CRYPTOKI_VERSION_MINOR;
-  strncpy_pad(info->manufacturerID, TPM2_PK11_MANUFACTURER, sizeof(info->manufacturerID));
-  strncpy_pad(info->libraryDescription, TPM2_PK11_LIBRARY_DESCRIPTION, sizeof(info->libraryDescription));
+  strncpy_pad(info->manufacturerID, sizeof(info->manufacturerID), TPM2_PK11_MANUFACTURER, sizeof(info->manufacturerID));
+  strncpy_pad(info->libraryDescription, sizeof(info->libraryDescription), TPM2_PK11_LIBRARY_DESCRIPTION, sizeof(info->libraryDescription));
   info->flags = 0;
 
   return CKR_OK;
@@ -86,40 +88,61 @@ CK_RV C_GetSessionInfo(CK_SESSION_HANDLE session_handle, CK_SESSION_INFO_PTR inf
 
 CK_RV C_GetSlotInfo(CK_SLOT_ID id, CK_SLOT_INFO_PTR info) {
   print_log(VERBOSE, "C_GetSlotInfo: id = %d", id);
-  strncpy_pad(info->manufacturerID, TPM2_PK11_MANUFACTURER, sizeof(info->manufacturerID));
-  strncpy_pad(info->slotDescription, TPM2_PK11_SLOT_DESCRIPTION, sizeof(info->slotDescription));
+  TPMS_CAPABILITY_DATA fixed;
+  if (tpm_info(main_session.context, TPM2_PT_FIXED, &fixed) != TPM2_RC_SUCCESS)
+    return CKR_DEVICE_ERROR;
+
+  TPML_TAGGED_TPM_PROPERTY props = fixed.data.tpmProperties;
+  TPMS_TAGGED_PROPERTY* manufacturer = tpm_info_get(props.tpmProperty, props.count, TPM2_PT_MANUFACTURER);
+  UINT32 manufacturer_val = manufacturer ? htobe32(manufacturer->value) : 0;
+  strncpy_pad(info->manufacturerID, sizeof(info->manufacturerID), manufacturer ? (char*) &manufacturer_val : TPM2_PK11_MANUFACTURER, manufacturer ? 4 : sizeof(info->manufacturerID));
+  strncpy_pad(info->slotDescription, sizeof(info->slotDescription), TPM2_PK11_SLOT_DESCRIPTION, sizeof(info->slotDescription));
 
   info->flags = CKF_TOKEN_PRESENT | CKF_HW_SLOT;
-  info->hardwareVersion.major = 0;
-  info->hardwareVersion.minor = 0;
-  info->firmwareVersion.major = 0;
-  info->firmwareVersion.minor = 0;
+  TPMS_TAGGED_PROPERTY* revision = tpm_info_get(props.tpmProperty, props.count, TPM2_PT_REVISION);
+  info->hardwareVersion.major = revision ? revision->value / 100 : 0;
+  info->hardwareVersion.minor = revision ? revision->value % 100 : 0;
+  TPMS_TAGGED_PROPERTY* major = tpm_info_get(props.tpmProperty, props.count, TPM2_PT_FIRMWARE_VERSION_1);
+  info->firmwareVersion.major = major ? major->value : 0;
+  TPMS_TAGGED_PROPERTY* minor = tpm_info_get(props.tpmProperty, props.count, TPM2_PT_FIRMWARE_VERSION_2);
+  info->firmwareVersion.minor = major ? major->value : 0;
   return CKR_OK;
 }
 
 CK_RV C_GetTokenInfo(CK_SLOT_ID id, CK_TOKEN_INFO_PTR info) {
   print_log(VERBOSE, "C_GetTokenInfo: id = %d", id);
-  strncpy_pad(info->label, TPM2_PK11_LABEL, sizeof(info->label));
-  strncpy_pad(info->manufacturerID, TPM2_PK11_MANUFACTURER, sizeof(info->manufacturerID));
-  strncpy_pad(info->model, TPM2_PK11_MODEL, sizeof(info->label));
-  strncpy_pad(info->serialNumber, TPM2_PK11_SERIAL, sizeof(info->serialNumber));
-  strncpy_pad(info->utcTime, "", sizeof(info->utcTime));
+  TPMS_CAPABILITY_DATA fixed;
+  if (tpm_info(main_session.context, TPM2_PT_FIXED, &fixed) != TPM2_RC_SUCCESS)
+    return CKR_DEVICE_ERROR;
+
+  TPML_TAGGED_TPM_PROPERTY props = fixed.data.tpmProperties;
+  strncpy_pad(info->label, sizeof(info->label), TPM2_PK11_EMPTY, sizeof(info->label));
+  TPMS_TAGGED_PROPERTY* manufacturer = tpm_info_get(props.tpmProperty, props.count, TPM2_PT_MANUFACTURER);
+  UINT32 manufacturer_val = manufacturer ? htobe32(manufacturer->value) : 0;
+  strncpy_pad(info->manufacturerID, sizeof(info->manufacturerID), manufacturer ? (char*) &manufacturer_val : TPM2_PK11_MANUFACTURER, manufacturer ? 4 : sizeof(info->manufacturerID));
+  strncpy_pad(info->model, sizeof(info->label), TPM2_PK11_MODEL, sizeof(info->label));
+  strncpy_pad(info->serialNumber, sizeof(info->serialNumber), TPM2_PK11_SERIAL, sizeof(info->serialNumber));
+  strncpy_pad(info->utcTime, sizeof(info->utcTime), "", sizeof(info->utcTime));
 
   info->flags = CKF_TOKEN_INITIALIZED | CKF_WRITE_PROTECTED;
-  info->ulMaxSessionCount = 1;
-  info->ulSessionCount = 0;
-  info->ulMaxRwSessionCount = 1;
+  TPMS_TAGGED_PROPERTY* max_sessions = tpm_info_get(props.tpmProperty, props.count, TPM2_PT_ACTIVE_SESSIONS_MAX);
+  info->ulMaxSessionCount = max_sessions ? max_sessions->value : CK_EFFECTIVELY_INFINITE;
+  info->ulSessionCount = open_sessions;
+  info->ulMaxRwSessionCount = max_sessions ? max_sessions->value : CK_EFFECTIVELY_INFINITE;
   info->ulRwSessionCount = 0;
   info->ulMaxPinLen = 64;
-  info->ulMinPinLen = 8;
-  info->ulTotalPublicMemory = 8;
-  info->ulFreePublicMemory = 8;
-  info->ulTotalPrivateMemory = 8;
-  info->ulFreePrivateMemory = 8;
-  info->hardwareVersion.major = 0;
-  info->hardwareVersion.minor = 0;
-  info->firmwareVersion.major = 0;
-  info->firmwareVersion.minor = 0;
+  info->ulMinPinLen = 0;
+  info->ulTotalPublicMemory = CK_UNAVAILABLE_INFORMATION;
+  info->ulFreePublicMemory = CK_UNAVAILABLE_INFORMATION;
+  info->ulTotalPrivateMemory = CK_UNAVAILABLE_INFORMATION;
+  info->ulFreePrivateMemory = CK_UNAVAILABLE_INFORMATION;
+  TPMS_TAGGED_PROPERTY* revision = tpm_info_get(props.tpmProperty, props.count, TPM2_PT_REVISION);
+  info->hardwareVersion.major = revision ? revision->value / 100 : 0;
+  info->hardwareVersion.minor = revision ? revision->value % 100 : 0;
+  TPMS_TAGGED_PROPERTY* major = tpm_info_get(props.tpmProperty, props.count, TPM2_PT_FIRMWARE_VERSION_1);
+  info->firmwareVersion.major = major ? major->value : 0;
+  TPMS_TAGGED_PROPERTY* minor = tpm_info_get(props.tpmProperty, props.count, TPM2_PT_FIRMWARE_VERSION_2);
+  info->firmwareVersion.minor = major ? major->value : 0;
 
   return CKR_OK;
 }
@@ -141,7 +164,7 @@ CK_RV C_FindObjectsInit(CK_SESSION_HANDLE session_handle, CK_ATTRIBUTE_PTR filte
 CK_RV C_FindObjects(CK_SESSION_HANDLE session_handle, CK_OBJECT_HANDLE_PTR object_handle, CK_ULONG max_objects, CK_ULONG_PTR found) {
   print_log(VERBOSE, "C_FindObjects: session = %x, max = %d", session_handle, max_objects);
   TPMS_CAPABILITY_DATA persistent;
-  tpm_list(get_session(session_handle)->context, &persistent);
+  tpm_info(get_session(session_handle)->context, TPM2_HT_PERSISTENT, &persistent);
   struct session* session = get_session(session_handle);
   *found = 0;
 
@@ -259,6 +282,7 @@ CK_RV C_Initialize(CK_VOID_PTR pInitArgs) {
   if (config_load(configfile_path, &pk11_config) < 0)
     return CKR_GENERAL_ERROR;
 
+  session_init(&main_session, &pk11_config);
   log_init(pk11_config.log_file, pk11_config.log_level);
   return CKR_OK;
 }

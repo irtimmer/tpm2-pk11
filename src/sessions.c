@@ -35,6 +35,8 @@
 #define DEFAULT_HOSTNAME "127.0.0.1"
 #define DEFAULT_PORT 2323
 
+unsigned int open_sessions;
+
 int session_init(struct session* session, struct config *config) {
   session->context = NULL;
 
@@ -116,6 +118,7 @@ int session_init(struct session* session, struct config *config) {
   rc = Tss2_Sys_Initialize(session->context, size, tcti_ctx, &abi_version);
 
   session->objects = object_load(session->context, config);
+  open_sessions++;
 
   return 0;
 
@@ -132,4 +135,5 @@ int session_init(struct session* session, struct config *config) {
 void session_close(struct session* session) {
   object_free(session->objects);
   Tss2_Sys_Finalize(session->context);
+  open_sessions--;
 }
