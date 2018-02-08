@@ -149,6 +149,7 @@ CK_RV C_GetTokenInfo(CK_SLOT_ID id, CK_TOKEN_INFO_PTR info) {
 
 CK_RV C_Finalize(CK_VOID_PTR reserved) {
   print_log(VERBOSE, "C_Finalize");
+  session_close(&main_session);
   return CKR_OK;
 }
 
