@@ -20,8 +20,18 @@ addons:
     - libp11-kit-dev
     - liburiparser-dev
     - clang-3.8
+    - libdbus-1-dev
+    - libglib2.0-dev
+    - pandoc
 
 install:
+    # build tpm2 simulator - needed for testing
+  - wget https://downloads.sourceforge.net/project/ibmswtpm2/ibmtpm974.tar.gz
+  - sha256sum ibmtpm974.tar.gz | grep -q 8e45d86129a0adb95fee4cee51f4b1e5b2d81ed3e55af875df53f98f39eb7ad7
+  - mkdir ibmtpm974 && pushd ibmtpm974 && tar axf ../ibmtpm974.tar.gz && pushd ./src && make
+  - ./tpm_server &
+  - popd && popd
+    # build tpm2-tss
   - wget http://ftpmirror.gnu.org/autoconf-archive/autoconf-archive-2017.09.28.tar.xz
   - sha256sum autoconf-archive-2017.09.28.tar.xz | grep -q 5c9fb5845b38b28982a3ef12836f76b35f46799ef4a2e46b48e2bd3c6182fa01
   - tar xJf autoconf-archive-2017.09.28.tar.xz && pushd autoconf-archive-2017.09.28
@@ -32,8 +42,44 @@ install:
   - ./bootstrap && ./configure && make -j$(nproc)
   - sudo make install
   - popd
+  - sudo ldconfig /usr/local/lib
+    # build user space resource manager & attach to simulator
+  - git clone https://github.com/tpm2-software/tpm2-abrmd.git
+  - pushd tpm2-abrmd
+  - ./bootstrap && ./configure --disable-dlclose --with-dbuspolicydir=/etc/dbus-1/system.d && make -j$(nproc) && sudo make install && popd
+  - sudo mkdir -p /var/lib/tpm
+  - sudo groupadd tss && sudo useradd -M -d /var/lib/tpm -s /bin/false -g tss tss
+  - sudo pkill -HUP dbus-daemon
+  - sudo -u tss tpm2-abrmd --tcti=libtcti-socket.so &
+    # openssl 1.0.2g - needed for tpm2-tools
+  - wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.0.0_1.0.2g-1ubuntu4.10_amd64.deb
+  - wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl-dev_1.0.2g-1ubuntu4.10_amd64.deb
+  - sha256sum libssl1.0.0_1.0.2g-1ubuntu4.10_amd64.deb | grep -q 99f550db61b0054715095fc77901280e81235900435f90b7db34af406f053832
+  - sha256sum libssl-dev_1.0.2g-1ubuntu4.10_amd64.deb | grep -q e44b09b81717a9ae86ff17adae1729682cb00b5285710e991f7b61c8a351c744
+  - sudo dpkg -i libssl1.0.0_1.0.2g-1ubuntu4.10_amd64.deb
+  - sudo dpkg -i libssl-dev_1.0.2g-1ubuntu4.10_amd64.deb
+    # build tpm2-tools - needed for testing
+  - git clone https://github.com/tpm2-software/tpm2-tools.git
+  - pushd tpm2-tools
+  - ./bootstrap && ./configure --disable-dlclose && make -j$(nproc) && sudo make install
+  - popd
+    # setup travis environment for testing.
+  - mkdir -p ~/.ssh
+  - chmod 700 ~/.ssh
+  - git clone https://github.com/sstephenson/bats.git
+  - pushd bats
+  - sudo ./install.sh /usr/local
+  - popd
+  - mkdir -p ~/.tpm2
+  - pushd ~/.tpm2
+  - echo "type tabrmd" >> config
+  - echo "hostname localhost" >> config
+  - echo "sign-using-encrypt true" >> config
+  - popd
 
 script:
   - mkdir build
   - pushd build
   - cmake .. && make
+  - bats ../test/bat/bats.bat
+  - popd
