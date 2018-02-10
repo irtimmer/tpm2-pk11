@@ -1,6 +1,6 @@
 /*
  * This file is part of tpm2-pk11.
- * Copyright (C) 2017 Iwan Timmer
+ * Copyright (C) 2017, 2018 Iwan Timmer
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,9 +19,9 @@
 
 #include "config.h"
 #include "objects.h"
+#include "tpm20_compat.h"
 
 #include <stdbool.h>
-#include <sapi/tpm20.h>
 #include <p11-kit/pkcs11.h>
 
 struct session {

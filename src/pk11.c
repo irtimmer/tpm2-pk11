@@ -1,6 +1,6 @@
 /*
  * This file is part of tpm2-pk11.
- * Copyright (C) 2017 Iwan Timmer
+ * Copyright (C) 2017, 2018 Iwan Timmer
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -249,15 +249,15 @@ CK_RV C_Sign(CK_SESSION_HANDLE session_handle, CK_BYTE_PTR data, CK_ULONG data_l
   TPM2_RC ret;
 
   if (pk11_config.sign_using_encrypt) {
-    TPM2B_PUBLIC_KEY_RSA message = { .size = TPM2_MAX_RSA_KEY_BYTES };
+    TPM2B_PUBLIC_KEY_RSA message = { .TSS_COMPAT_TMPB(size) = TPM2_MAX_RSA_KEY_BYTES };
     pObject object = session->current_object->opposite;
     CK_ULONG_PTR key_size = (CK_ULONG_PTR) attr_get(object, CKA_MODULUS_BITS, NULL);
     ret = tpm_sign_encrypt(session->context, session->key_handle, *key_size / 8, data, data_len, &message);
-    retmem(signature, signature_len, message.buffer, message.size);
+    retmem(signature, signature_len, message.TSS_COMPAT_TMPB(buffer), message.TSS_COMPAT_TMPB(size));
   } else {
     TPMT_SIGNATURE sign = {0};
     ret = tpm_sign(session->context, session->key_handle, data, data_len, &sign);
-    retmem(signature, signature_len, sign.signature.rsassa.sig.buffer, sign.signature.rsassa.sig.size);
+    retmem(signature, signature_len, sign.signature.rsassa.sig.TSS_COMPAT_TMPB(buffer), sign.signature.rsassa.sig.TSS_COMPAT_TMPB(size));
   }
 
   return ret == TPM2_RC_SUCCESS ? CKR_OK : CKR_GENERAL_ERROR;
@@ -272,10 +272,10 @@ CK_RV C_DecryptInit(CK_SESSION_HANDLE session_handle, CK_MECHANISM_PTR mechanism
 
 CK_RV C_Decrypt(CK_SESSION_HANDLE session_handle, CK_BYTE_PTR enc_data, CK_ULONG enc_data_len, CK_BYTE_PTR data, CK_ULONG_PTR data_len) {
   print_log(VERBOSE, "C_Decrypt: session = %x, len = %d", session_handle, enc_data_len);
-  TPM2B_PUBLIC_KEY_RSA message = { .size = TPM2_MAX_RSA_KEY_BYTES };
+  TPM2B_PUBLIC_KEY_RSA message = { .TSS_COMPAT_TMPB(size) = TPM2_MAX_RSA_KEY_BYTES };
   struct session* session = get_session(session_handle);
   TPM2_RC ret = tpm_decrypt(session->context, session->key_handle, enc_data, enc_data_len, &message);
-  retmem(data, data_len, message.buffer, message.size);
+  retmem(data, data_len, message.TSS_COMPAT_TMPB(buffer), message.TSS_COMPAT_TMPB(size));
 
   return ret == TPM2_RC_SUCCESS ? CKR_OK : CKR_GENERAL_ERROR;
 }

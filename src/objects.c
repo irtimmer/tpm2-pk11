@@ -97,14 +97,14 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
       goto error;
 
     memset(userdata, 0, sizeof(UserdataTpm));
-    userdata->name.size = sizeof(TPMU_NAME);
+    userdata->name.TSS_COMPAT_TMPB(size) = sizeof(TPMU_NAME);
     rc = tpm_readpublic(ctx, persistent.data.handles.handle[i], &userdata->tpm_key, &userdata->name);
     if (rc != TPM2_RC_SUCCESS) {
       free(userdata);
       goto error;
     }
-    TPM2B_PUBLIC_KEY_RSA *rsa_key = &userdata->tpm_key.publicArea.unique.rsa;
-    TPMS_RSA_PARMS *rsa_key_parms = &userdata->tpm_key.publicArea.parameters.rsaDetail;
+    TPM2B_PUBLIC_KEY_RSA *rsa_key = &userdata->tpm_key.TSS_COMPAT_TMPB(publicArea).unique.rsa;
+    TPMS_RSA_PARMS *rsa_key_parms = &userdata->tpm_key.TSS_COMPAT_TMPB(publicArea).parameters.rsaDetail;
 
     /*
      * fill the label with the same value as the name (they both have
@@ -112,21 +112,21 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
      * the label). Since the label is an UTF8 string, we need to
      * transform the binary name into a hexadecimal string.
      */
-    size_t max_label_size = userdata->name.size;
+    size_t max_label_size = userdata->name.TSS_COMPAT_TMPB(size);
     if (max_label_size >= sizeof(userdata->label) / 2)
         max_label_size = sizeof(userdata->label) / 2;
 
     for (size_t n = 0; n < max_label_size; ++n)
-      sprintf((char*) userdata->label + 2 * n, "%02X", userdata->name.name[n]);
+      sprintf((char*) userdata->label + 2 * n, "%02X", userdata->name.TSS_COMPAT_TMPB(name[n]));
 
-    userdata->public_object.id = userdata->name.name;
-    userdata->public_object.id_size = userdata->name.size;
+    userdata->public_object.id = userdata->name.TSS_COMPAT_TMPB(name);
+    userdata->public_object.id_size = userdata->name.TSS_COMPAT_TMPB(size);
     userdata->public_object.label = userdata->label;
     userdata->public_object.label_size = max_label_size * 2;
     userdata->public_object.class = CKO_PUBLIC_KEY;
     userdata->public_object.token = CK_TRUE;
-    userdata->private_object.id = userdata->name.name;
-    userdata->private_object.id_size = userdata->name.size;
+    userdata->private_object.id = userdata->name.TSS_COMPAT_TMPB(name);
+    userdata->private_object.id_size = userdata->name.TSS_COMPAT_TMPB(size);
     userdata->private_object.label = userdata->label;
     userdata->private_object.label_size = max_label_size * 2;
     userdata->private_object.class = CKO_PRIVATE_KEY;
@@ -134,7 +134,7 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
     userdata->key.sign = CK_TRUE;
     userdata->key.decrypt = CK_TRUE;
     userdata->key.key_type = CKK_RSA;
-    userdata->modulus.modulus = rsa_key->buffer;
+    userdata->modulus.modulus = rsa_key->TSS_COMPAT_TMPB(buffer);
     userdata->modulus.modulus_size = rsa_key_parms->keyBits / 8;
     userdata->modulus.bits = rsa_key_parms->keyBits;
     userdata->public_key.exponent = htobe32(rsa_key_parms->exponent == 0 ? 65537 : rsa_key_parms->exponent);

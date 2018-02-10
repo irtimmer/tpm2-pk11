@@ -19,10 +19,11 @@
 
 #pragma once
 
+#include "tpm20_compat.h"
+
 #include <stddef.h>
 
 #include <p11-kit/pkcs11.h>
-#include <sapi/tpm20.h>
 
 #define NELEMS(x) (sizeof(x) / sizeof((x)[0]))
 
