@@ -87,6 +87,12 @@ typedef struct pkcs_modulus_t {
 typedef struct pkcs_x509_t {
   char* value;
   size_t value_size;
+  char* subject;
+  size_t subject_size;
+  char* issuer;
+  size_t issuer_size;
+  char* serial;
+  size_t serial_size;
   CK_CERTIFICATE_TYPE cert_type;
 } PkcsX509, *pPkcsX509;
 
@@ -94,6 +100,6 @@ extern AttrIndex OBJECT_INDEX[4];
 extern AttrIndex KEY_INDEX[3];
 extern AttrIndex PUBLIC_KEY_INDEX[1];
 extern AttrIndex MODULUS_INDEX[2];
-extern AttrIndex CERTIFICATE_INDEX[2];
+extern AttrIndex CERTIFICATE_INDEX[5];
 
 void* attr_get(pObject object, CK_ATTRIBUTE_TYPE type, size_t *size);

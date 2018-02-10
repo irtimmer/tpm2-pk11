@@ -43,6 +43,9 @@ AttrIndex MODULUS_INDEX[] = {
 
 AttrIndex CERTIFICATE_INDEX[] = {
   attr_dynamic_index_of(CKA_VALUE, PkcsX509, value, value_size),
+  attr_dynamic_index_of(CKA_SUBJECT, PkcsX509, subject, subject_size),
+  attr_dynamic_index_of(CKA_ISSUER, PkcsX509, issuer, issuer_size),
+  attr_dynamic_index_of(CKA_SERIAL_NUMBER, PkcsX509, serial, serial_size),
   attr_index_of(CKA_CERTIFICATE_TYPE, PkcsX509, cert_type),
 };
 

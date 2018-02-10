@@ -27,11 +27,19 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <libtasn1.h>
+
 #define MAX_ID_BITS 512
+#define MAX_DER_LENGTH 256
+
+extern const asn1_static_node pkix_asn1_tab[];
 
 typedef struct userdata_certificate_t {
   CK_BYTE id[MAX_ID_BITS / 4];
   CK_UTF8CHAR label[MAX_ID_BITS / 2];
+  CK_BYTE subject[MAX_DER_LENGTH];
+  CK_BYTE issuer[MAX_DER_LENGTH];
+  CK_BYTE serial[MAX_DER_LENGTH];
   PkcsObject object;
   PkcsX509 certificate;
 } UserdataCertificate, *pUserdataCertificate;
@@ -69,6 +77,39 @@ pObject certificate_read(const char* pathname) {
   userdata->certificate.value_size = size;
   userdata->certificate.value = ((char*) userdata) + sizeof(UserdataCertificate);
   userdata->certificate.cert_type = CKC_X_509;
+  userdata->certificate.subject = userdata->subject;
+  userdata->certificate.subject_size = 0;
+  userdata->certificate.issuer = userdata->issuer;
+  userdata->certificate.issuer_size = 0;
+  userdata->certificate.serial = userdata->serial;
+  userdata->certificate.serial_size = 0;
+
+  ASN1_TYPE definition = ASN1_TYPE_EMPTY;
+  ASN1_TYPE element = ASN1_TYPE_EMPTY;
+  char errorDescription[ASN1_MAX_ERROR_DESCRIPTION_SIZE];
+
+  asn1_array2tree(pkix_asn1_tab, &definition, errorDescription);
+  asn1_create_element(definition, "PKIX1.Certificate", &element);
+  if (asn1_der_decoding(&element, userdata->certificate.value, userdata->certificate.value_size, errorDescription) != ASN1_SUCCESS) {
+    free(object);
+    free(userdata);
+    return NULL;
+  }
+
+  int length = MAX_DER_LENGTH;
+  if (asn1_der_coding(element, "tbsCertificate.subject", userdata->subject, &length, errorDescription) == ASN1_SUCCESS)
+    userdata->certificate.subject_size = length;
+
+  length = MAX_DER_LENGTH;
+  if (asn1_der_coding(element, "tbsCertificate.issuer", userdata->issuer, &length, errorDescription) == ASN1_SUCCESS)
+    userdata->certificate.issuer_size = length;
+
+  length = MAX_DER_LENGTH;
+  if (asn1_der_coding(element, "tbsCertificate.serialNumber", userdata->serial, &length, errorDescription) == ASN1_SUCCESS)
+    userdata->certificate.serial_size = length;
+
+  asn1_delete_structure(&definition);
+  asn1_delete_structure(&element);
 
   object->userdata = userdata;
   object->num_entries = 2;
