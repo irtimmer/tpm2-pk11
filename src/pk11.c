@@ -35,6 +35,10 @@
 
 #define get_session(x) ((struct session*) x)
 
+static const CK_MECHANISM_TYPE supported_mechanisms[] = {
+  CKM_RSA_PKCS,
+};
+
 static struct config pk11_config = {0};
 static struct session main_session;
 
@@ -291,7 +295,25 @@ CK_RV C_Initialize(CK_VOID_PTR pInitArgs) {
 /* Stubs for not yet supported functions*/
 CK_RV C_GetMechanismList(CK_SLOT_ID id, CK_MECHANISM_TYPE_PTR list, CK_ULONG_PTR count) {
   print_log(VERBOSE, "C_GetMechanismList: slot = %d", id);
-  return CKR_FUNCTION_NOT_SUPPORTED;
+
+  if (count == NULL_PTR)
+    return CKR_ARGUMENTS_BAD;
+
+  int countSupported = sizeof(supported_mechanisms) / sizeof(CK_MECHANISM_TYPE);
+
+  if (list != NULL_PTR && *count < countSupported) {
+    *count = countSupported;
+    return CKR_BUFFER_TOO_SMALL;
+  }
+
+  *count = countSupported;
+  if (list != NULL_PTR) {
+    for (CK_ULONG i = 0; i < countSupported; i++) {
+      list[i] = supported_mechanisms[i];
+    }
+  }
+
+  return CKR_OK;
 }
 
 CK_RV C_GetMechanismInfo (CK_SLOT_ID id, CK_MECHANISM_TYPE type, CK_MECHANISM_INFO_PTR info) {
