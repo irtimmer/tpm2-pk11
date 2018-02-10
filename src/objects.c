@@ -1,6 +1,6 @@
 /*
  * This file is part of tpm2-pk11.
- * Copyright (C) 2017 Iwan Timmer
+ * Copyright (C) 2017, 2018 Iwan Timmer
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -130,11 +130,13 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
     userdata->public_object.label = userdata->label;
     userdata->public_object.label_size = max_label_size * 2;
     userdata->public_object.class = CKO_PUBLIC_KEY;
+    userdata->public_object.token = CK_TRUE;
     userdata->private_object.id = userdata->name.name;
     userdata->private_object.id_size = userdata->name.size;
     userdata->private_object.label = userdata->label;
     userdata->private_object.label_size = max_label_size * 2;
     userdata->private_object.class = CKO_PRIVATE_KEY;
+    userdata->private_object.token = CK_TRUE;
     userdata->key.sign = CK_TRUE;
     userdata->key.decrypt = CK_TRUE;
     userdata->key.key_type = CKK_RSA;

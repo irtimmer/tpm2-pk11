@@ -50,6 +50,7 @@ pObject certificate_read(const char* pathname) {
   }
 
   userdata->object.class = CKO_CERTIFICATE;
+  userdata->object.token = CK_TRUE;
   userdata->object.id = userdata->id;
   userdata->object.id_size = 0;
   char* filename = basename(pathname);

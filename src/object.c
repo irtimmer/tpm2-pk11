@@ -23,6 +23,7 @@ AttrIndex OBJECT_INDEX[] = {
   attr_dynamic_index_of(CKA_ID, PkcsObject, id, id_size),
   attr_dynamic_index_of(CKA_LABEL, PkcsObject, label, label_size),
   attr_index_of(CKA_CLASS, PkcsObject, class),
+  attr_index_of(CKA_TOKEN, PkcsObject, token)
 };
 
 AttrIndex KEY_INDEX[] = {
