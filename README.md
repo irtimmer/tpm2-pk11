@@ -1,39 +1,16 @@
-TPM2 PK11
+TPM2-PK11
 ==========
 
-TPM2 PK11 provide a PKCS#11 backend for a TPM 2.0 chip.
-This can be used to secure your SSH keys.
+[![Build Status](https://travis-ci.org/irtimmer/tpm2-pk11.svg?branch=master)](https://travis-ci.org/irtimmer/tpm2-pk11)
 
-NOTICE: Currently only the OpenSSH client is supported
+TPM2-PK11 provide a PKCS#11 backend for TPM 2.0 chips.
+This allows you to use your TPM keys in every application which support the PKCS #11 standard.
+For more information about howto setup keys, certificates and applications see the [wiki](https://github.com/irtimmer/tpm2-pk11/wiki).
 
-## SSH Usage
+## Supported applications
 
-1. Create key's
-```
-mkdir ~/.tpm2 && cd ~/.tpm2
-tpm2_createprimary -A e -g 0x000b -G 0x0001 -C po.ctx
-tpm2_create -c po.ctx -g 0x000b -G 0x0001 -o key.pub -O key.priv
-tpm2_load -c po.ctx -u key.pub -r key.priv -n key.name -C obj.ctx
-tpm2_evictcontrol -A o -c obj.ctx -S 0x81010010
-rm key.name *.ctx
-```
-2. Create configuration file and change it for your setup
-```
-cp config.sample ~/.tpm2/config
-```
-3. Extract public key
-```
-ssh-keygen -D libtpm2-pk11.so
-```
-4. Use your TPM key
-```
-ssh -I libtpm2-pk11.so ssh.example.com
-```
-or add the PKCS#11 module to your ssh config in `~/.ssh/config`:
-```
-Host *
-    PKCS11Provider libtpm2-pk11.so
-```
+- OpenSSH Client (SSH key in TPM)
+- Firefox (Private key of Client certificate in TPM)
 
 ## Contribute
 
@@ -43,4 +20,4 @@ Host *
 
 ## Copyright and license
 
-Copyright 2017 Iwan Timmer. Distributed under the GNU LGPL v2.1. For full terms see the LICENSE file
+Copyright 2017, 2018 Iwan Timmer. Distributed under the GNU LGPL v2.1. For full terms see the LICENSE file
