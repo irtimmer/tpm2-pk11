@@ -36,7 +36,7 @@ void strncpy_pad(char *dest, size_t dest_len, const char *src, size_t n) {
 }
 
 void retmem(void* dest, size_t* size, const void* src, size_t n) {
-  if (n <= *size)
+  if (dest && n <= *size)
     memcpy(dest, src, n);
 
   *size = n;
