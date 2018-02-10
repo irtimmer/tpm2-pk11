@@ -1,6 +1,6 @@
 /*
  * This file is part of tpm2-pk11.
- * Copyright (C) 2017 Iwan Timmer
+ * Copyright (C) 2017, 2018 Iwan Timmer
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -58,5 +58,41 @@ typedef struct object_t {
   TPMI_DH_OBJECT tpm_handle;
   struct object_t *opposite;
 } Object, *pObject;
+
+typedef struct pkcs_object_t {
+  void* id;
+  size_t id_size;
+  char* label;
+  size_t label_size;
+  CK_OBJECT_CLASS class;
+} PkcsObject, *pPkcsObject;
+
+typedef struct pkcs_key_t {
+  CK_BBOOL sign;
+  CK_BBOOL decrypt;
+  CK_KEY_TYPE key_type;
+} PkcsKey, *pPkcsKey;
+
+typedef struct pkcs_public_key_t {
+  uint32_t exponent;
+} PkcsPublicKey, *pPkcsPublicKey;
+
+typedef struct pkcs_modulus_t {
+  void* modulus;
+  size_t modulus_size;
+  CK_ULONG bits;
+} PkcsModulus, *pPkcsModulus;
+
+typedef struct pkcs_x509_t {
+  char* value;
+  size_t value_size;
+  CK_CERTIFICATE_TYPE cert_type;
+} PkcsX509, *pPkcsX509;
+
+extern AttrIndex OBJECT_INDEX[3];
+extern AttrIndex KEY_INDEX[3];
+extern AttrIndex PUBLIC_KEY_INDEX[1];
+extern AttrIndex MODULUS_INDEX[2];
+extern AttrIndex CERTIFICATE_INDEX[2];
 
 void* attr_get(pObject object, CK_ATTRIBUTE_TYPE type, size_t *size);

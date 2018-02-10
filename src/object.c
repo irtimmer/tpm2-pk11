@@ -1,6 +1,6 @@
 /*
  * This file is part of tpm2-pk11.
- * Copyright (C) 2017 Iwan Timmer
+ * Copyright (C) 2017, 2018 Iwan Timmer
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,6 +18,32 @@
  */
 
 #include "object.h"
+
+AttrIndex OBJECT_INDEX[] = {
+  attr_dynamic_index_of(CKA_ID, PkcsObject, id, id_size),
+  attr_dynamic_index_of(CKA_LABEL, PkcsObject, label, label_size),
+  attr_index_of(CKA_CLASS, PkcsObject, class),
+};
+
+AttrIndex KEY_INDEX[] = {
+  attr_index_of(CKA_SIGN, PkcsKey, sign),
+  attr_index_of(CKA_DECRYPT, PkcsKey, decrypt),
+  attr_index_of(CKA_KEY_TYPE, PkcsKey, key_type)
+};
+
+AttrIndex PUBLIC_KEY_INDEX[] = {
+  attr_index_of(CKA_PUBLIC_EXPONENT, PkcsPublicKey, exponent)
+};
+
+AttrIndex MODULUS_INDEX[] = {
+  attr_dynamic_index_of(CKA_MODULUS, PkcsModulus, modulus, modulus_size),
+  attr_index_of(CKA_MODULUS_BITS, PkcsModulus, bits),
+};
+
+AttrIndex CERTIFICATE_INDEX[] = {
+  attr_dynamic_index_of(CKA_VALUE, PkcsX509, value, value_size),
+  attr_index_of(CKA_CERTIFICATE_TYPE, PkcsX509, cert_type),
+};
 
 void* attr_get(pObject object, CK_ATTRIBUTE_TYPE type, size_t *size) {
   for (int i = 0; i < object->num_entries; i++) {

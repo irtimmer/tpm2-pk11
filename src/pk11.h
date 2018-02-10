@@ -32,33 +32,3 @@
 #define TPM2_PK11_LIBRARY_DESCRIPTION "TPM2 PKCS11 Library"
 #define TPM2_PK11_MODEL "TPM2"
 #define TPM2_PK11_SERIAL "123456789"
-
-typedef struct pkcs_object_t {
-  void* id;
-  size_t id_size;
-  char* label;
-  size_t label_size;
-  CK_OBJECT_CLASS class;
-} PkcsObject, *pPkcsObject;
-
-typedef struct pkcs_key_t {
-  CK_BBOOL sign;
-  CK_BBOOL decrypt;
-  CK_KEY_TYPE key_type;
-} PkcsKey, *pPkcsKey;
-
-typedef struct pkcs_public_key_t {
-  uint32_t exponent;
-} PkcsPublicKey, *pPkcsPublicKey;
-
-typedef struct pkcs_modulus_t {
-  void* modulus;
-  size_t modulus_size;
-  CK_ULONG bits;
-} PkcsModulus, *pPkcsModulus;
-
-typedef struct pkcs_x509_t {
-  char* value;
-  size_t value_size;
-  CK_CERTIFICATE_TYPE cert_type;
-} PkcsX509, *pPkcsX509;

@@ -1,6 +1,6 @@
 /*
  * This file is part of tpm2-pk11.
- * Copyright (C) 2017 Iwan Timmer
+ * Copyright (C) 2017, 2018 Iwan Timmer
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -35,15 +35,7 @@ typedef struct userdata_certificate_t {
   PkcsX509 certificate;
 } UserdataCertificate, *pUserdataCertificate;
 
-static AttrIndex OBJECT_INDEX[] = {
-  attr_dynamic_index_of(CKA_ID, PkcsObject, id, id_size),
-  attr_index_of(CKA_CLASS, PkcsObject, class)
-};
 
-static AttrIndex CERTIFICATE_INDEX[] = {
-  attr_dynamic_index_of(CKA_VALUE, PkcsX509, value, value_size),
-  attr_index_of(CKA_CERTIFICATE_TYPE, PkcsX509, cert_type),
-};
 
 pObject certificate_read(const char* pathname) {
   pObject object = malloc(sizeof(Object));

@@ -42,27 +42,6 @@ typedef struct userdata_tpm_t {
   PkcsModulus modulus;
 } UserdataTpm, *pUserdataTpm;
 
-static AttrIndex OBJECT_INDEX[] = {
-  attr_dynamic_index_of(CKA_ID, PkcsObject, id, id_size),
-  attr_dynamic_index_of(CKA_LABEL, PkcsObject, label, label_size),
-  attr_index_of(CKA_CLASS, PkcsObject, class)
-};
-
-static AttrIndex KEY_INDEX[] = {
-  attr_index_of(CKA_SIGN, PkcsKey, sign),
-  attr_index_of(CKA_DECRYPT, PkcsKey, decrypt),
-  attr_index_of(CKA_KEY_TYPE, PkcsKey, key_type)
-};
-
-static AttrIndex PUBLIC_KEY_INDEX[] = {
-  attr_index_of(CKA_PUBLIC_EXPONENT, PkcsPublicKey, exponent)
-};
-
-static AttrIndex MODULUS_INDEX[] = {
-  attr_dynamic_index_of(CKA_MODULUS, PkcsModulus, modulus, modulus_size),
-  attr_index_of(CKA_MODULUS_BITS, PkcsModulus, bits),
-};
-
 pObject object_get(pObjectList list, int id) {
   while (list != NULL) {
     if (list->object != NULL && list->object->id == id)
