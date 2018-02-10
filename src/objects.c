@@ -78,11 +78,6 @@ void object_free(pObjectList list) {
   }
 }
 
-static inline int hex_to_char(int c)
-{
-    return c >= 10 ? c - 10 + 'A' : c + '0';
-}
-
 pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
   pObjectList list = malloc(sizeof(ObjectList));
   list->object = NULL;
@@ -120,10 +115,9 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
     size_t max_label_size = userdata->name.size;
     if (max_label_size >= sizeof(userdata->label) / 2)
         max_label_size = sizeof(userdata->label) / 2;
-    for (size_t n = 0; n < max_label_size; ++n) {
-        userdata->label[2 * n + 0] = hex_to_char(userdata->name.name[n] >> 4);
-        userdata->label[2 * n + 1] = hex_to_char(userdata->name.name[n] & 0x0f);
-    }
+
+    for (size_t n = 0; n < max_label_size; ++n)
+      sprintf((char*) userdata->label + 2 * n, "%02X", userdata->name.name[n]);
 
     userdata->public_object.id = userdata->name.name;
     userdata->public_object.id_size = userdata->name.size;

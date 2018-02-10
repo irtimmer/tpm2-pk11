@@ -30,7 +30,8 @@
 #define MAX_ID_BITS 512
 
 typedef struct userdata_certificate_t {
-  char id[MAX_ID_BITS / 4];
+  CK_BYTE id[MAX_ID_BITS / 4];
+  CK_UTF8CHAR label[MAX_ID_BITS / 2];
   PkcsObject object;
   PkcsX509 certificate;
 } UserdataCertificate, *pUserdataCertificate;
@@ -53,13 +54,17 @@ pObject certificate_read(const char* pathname) {
   userdata->object.token = CK_TRUE;
   userdata->object.id = userdata->id;
   userdata->object.id_size = 0;
+  userdata->object.label = userdata->label;
   char* filename = basename(pathname);
   while (userdata->object.id_size < sizeof(userdata->id)) {
     if (sscanf(filename + (userdata->object.id_size * 2), "%2hhx", userdata->id + userdata->object.id_size) != 1)
       break;
-    else
-      userdata->object.id_size++;
+
+    sprintf((char*) userdata->label + userdata->object.id_size * 2, "%02X", userdata->id[userdata->object.id_size]);
+    userdata->object.id_size++;
   }
+
+  userdata->object.label_size = userdata->object.id_size * 2;
 
   userdata->certificate.value_size = size;
   userdata->certificate.value = ((char*) userdata) + sizeof(UserdataCertificate);
