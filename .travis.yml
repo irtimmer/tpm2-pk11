@@ -3,6 +3,13 @@ compiler:
   - gcc
   - clang-3.8
 
+env:
+  - TSS_BRANCH=master
+
+matrix:
+  include:
+    env: TSS_BRANCH=1.x
+
 sudo: required
 dist: trusty
 
@@ -20,7 +27,7 @@ install:
   - tar xJf autoconf-archive-2017.09.28.tar.xz && pushd autoconf-archive-2017.09.28
   - ./configure --prefix=/usr && make -j$(nproc) && sudo make install
   - popd
-  - git clone https://github.com/tpm2-software/tpm2-tss.git
+  - git clone https://github.com/tpm2-software/tpm2-tss.git --branch $TSS_BRANCH
   - pushd tpm2-tss
   - ./bootstrap && ./configure && make -j$(nproc)
   - sudo make install
