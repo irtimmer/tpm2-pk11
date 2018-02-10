@@ -11,10 +11,22 @@ NOTICE: Currently only the OpenSSH client is supported
 1. Create key's
 ```
 mkdir ~/.tpm2 && cd ~/.tpm2
-tpm2_createprimary -A e -g 0x000b -G 0x0001 -C po.ctx
-tpm2_create -c po.ctx -g 0x000b -G 0x0001 -o key.pub -O key.priv
-tpm2_load -c po.ctx -u key.pub -r key.priv -n key.name -C obj.ctx
-tpm2_evictcontrol -A o -c obj.ctx -S 0x81010010
+
+# Create a primary key with hash algorithm sha256 and key algorithm rsa
+# and store the object context in a file (po.ctx)
+tpm2_createprimary -H o -g sha256 -G rsa -C po.ctx
+
+# now create an object that can be loaded into the tpm with parent
+# object from file (po.ctx) using hash algorithm sha256 and key algorithm rsa
+# output the public and private keys to key.pub|priv
+tpm2_create -c po.ctx -g sha256 -G rsa -u key.pub -r key.priv
+
+# load the private and public keys into the TPM's transient memory
+tpm2_load -c po.ctx -u key.pub -r key.priv -C obj.ctx
+
+# make the object persistent, specifying a valid handle
+tpm2_evictcontrol -A o -c obj.ctx -H 0x81010010
+
 rm key.name *.ctx
 ```
 2. Create configuration file and change it for your setup
