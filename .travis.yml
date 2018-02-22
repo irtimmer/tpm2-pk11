@@ -23,6 +23,7 @@ addons:
     - libdbus-1-dev
     - libglib2.0-dev
     - pandoc
+    - libgcrypt20-dev
 
 install:
     # build tpm2 simulator - needed for testing
