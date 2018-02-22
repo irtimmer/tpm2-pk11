@@ -23,6 +23,7 @@ addons:
     - libdbus-1-dev
     - libglib2.0-dev
     - pandoc
+    - libcurl4-gnutls-dev
 
 install:
     # build tpm2 simulator - needed for testing
