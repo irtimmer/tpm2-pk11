@@ -8,7 +8,7 @@ pkg_check_modules(SAPI REQUIRED sapi)
 pkg_check_modules(TCTI_SOCKET tcti-socket)
 pkg_check_modules(TCTI_DEVICE tcti-device)
 pkg_check_modules(TCTI_TABRMD tcti-tabrmd)
-pkg_check_modules(LIBTASN1 libtasn1)
+pkg_check_modules(LIBTASN1 REQUIRED libtasn1)
 
 if(NOT TCTI_SOCKET_FOUND AND NOT TCTI_DEVICE_FOUND AND NOT TCTI_TABRMD_FOUND)
   message(FATAL_ERROR "At least one connection type must be enabled")
