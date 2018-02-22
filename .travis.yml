@@ -24,6 +24,7 @@ addons:
     - libglib2.0-dev
     - pandoc
     - libgcrypt20-dev
+    - libcurl4-openssl-dev
 
 install:
     # build tpm2 simulator - needed for testing
