@@ -1,0 +1,137 @@
+name: tpm2-enhanced-openssh-client
+version: '1.0'
+summary: PKCS#11 cryptoki service provider for TPM 2.0 chips
+description: |
+  An OpenSSH client based on libtpm2-pk11 who provides a PKCS#11 cryptoki service for applications.
+  Your TPM 2.0 chip "/dev/tpm0" will be used to secure your SSH private keys.
+  libtpm2-pkcs11 is free software licensed under GNU LGPL v2.1, written by Iwan Timmer.
+  See https://github.com/irtimmer/tpm2-pk11/
+  Related projects:
+  * Canonical's TPM2 snapcraft project at https://git.launchpad.net/~snappy-hwe-team/snappy-hwe-snaps/+git/tpm2
+  * Portable OpenSSH under BSD licence, see https://github.com/openssh/openssh-portable/blob/master/LICENCE
+  * A snapcraft project written by Marius Gripsgard at https://github.com/mariogrip/openssh
+grade: devel
+confinement: devmode
+
+apps:
+  ssh:
+    command: ssh
+    plugs: [network]
+  scp:
+    command: scp
+    plugs: [network]
+  sftp:
+    command: sftp
+    plugs: [network]
+  ssh-add:
+    command: ssh-add
+    plugs: [network]
+  ssh-agent:
+    command: ssh-agent
+    plugs: [network]
+  ssh-keygen:
+    command: ssh-keygen
+    plugs: [network]
+  ssh-keyscan:
+    command: ssh-keyscan
+    plugs: [network]
+
+parts:
+  main:
+    # https://github.com/openssh/openssh-portable
+    source: .
+    after: [openssh]
+    plugin: nil
+
+  libtpm2-pk11:
+    source: .
+    after:
+      - tpm2-tss
+      - tpm2-abrmd
+    plugin: cmake
+    build-packages:
+      - libp11-kit-dev
+
+  tpm2-abrmd:
+    # Note: The latest official release can be downloaded from:
+    # https://github.com/intel/tpm2-abrmd/releases/latest
+    # Tracking un-releassed versoin of tpm2-abrmd from GitHub
+    source: https://github.com/intel/tpm2-abrmd.git
+    source-type: git
+    source-branch: master
+    after:
+      - tpm2-tss
+    plugin: autotools
+    configflags:
+      - --enable-unit
+    build-packages:
+      - libc6-dev
+      - libcmocka-dev
+      - libdbus-1-dev
+      - libglib2.0-dev
+      - libtool
+      - pkg-config
+    install: |
+      # Run all tests shipped by default
+      make check
+    prime:
+      - -include
+      - -lib/pkgconfig
+      - -share/man
+
+  tpm2-tss:
+    # Note: The latest official release can be downloaded from:
+    # https://github.com/intel/tpm2-tss/releases/latest
+    source: https://github.com/intel/tpm2-tss.git
+    source-type: git
+    source-branch: master
+    source-depth: 1
+    prepare: |
+      patch -Np1 < ../../../snap/patches/tpm2-tss/0001-ignore-test-unit-tcti-device.patch
+    plugin: autotools
+    configflags:
+      - --enable-unit
+    build-packages:
+      - g++
+      - gcc
+      - libc6-dev
+      - libcmocka-dev
+      - libtool
+    install: |
+      # Run all tests shipped by default
+      make check
+    prime:
+      - -include
+      - -lib/pkgconfig
+      - -share/man
+
+  tpm2-tools:
+    # Note: The latest official release can be downloaded from:
+    # https://github.com/intel/tpm2-tools/releases/latest
+    source: https://github.com/01org/tpm2-tools.git
+    source-type: git
+    source-branch: master
+    source-depth: 1
+    after:
+      - tpm2-tss
+      - tpm2-abrmd
+    plugin: autotools
+    configflags:
+      - --enable-unit
+    build-packages:
+      - autoconf
+      - autoconf-archive
+      - automake
+      - gcc
+      - libc6-dev
+      - libcmocka-dev
+      - libcurl4-openssl-dev
+      - libssl-dev
+      - libtool
+      - pandoc
+      - pkg-config
+    prime:
+      - -include
+    install: |
+      # Run all tests shipped by default
+      make check

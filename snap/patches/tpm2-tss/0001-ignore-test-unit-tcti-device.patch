@@ -1,0 +1,18 @@
+From 2dcaeb68f97e8cb150f8ed65e15243c817cfff9e Mon Sep 17 00:00:00 2001
+From: Liu Qun <qunliu@zyhx-group.com>
+Date: Thu, 21 Dec 2017 16:13:52 +0800
+Subject: Ignore test/unit/tcti-device on Raspberry Pi
+
+
+diff --git a/Makefile.am b/Makefile.am
+index 732504e..596acd7 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -51,7 +51,6 @@ TESTS_UNIT  = \
+     test/unit/CommonPreparePrologue \
+     test/unit/CopyCommandHeader \
+     test/unit/GetNumHandles \
+-    test/unit/tcti-device \
+     test/unit/tcti-socket \
+     test/unit/UINT8-marshal \
+     test/unit/UINT16-marshal \
