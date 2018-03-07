@@ -49,25 +49,25 @@ TPM2_RC tpm_sign(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned char
   TPMT_SIG_SCHEME scheme;
   scheme.scheme = TPM2_ALG_RSASSA;
 
-  int digestSize;
+  int digest_size;
   if (sizeof(oid_sha1) < hash_length && memcmp(hash, oid_sha1, sizeof(oid_sha1)) == 0) {
     scheme.details.rsassa.hashAlg = TPM2_ALG_SHA1;
-    digestSize = TPM2_SHA1_DIGEST_SIZE;
+    digest_size = TPM2_SHA1_DIGEST_SIZE;
   } else if (sizeof(oid_sha256) < hash_length && memcmp(hash, oid_sha256, sizeof(oid_sha256)) == 0) {
     scheme.details.rsassa.hashAlg = TPM2_ALG_SHA256;
-    digestSize = TPM2_SHA256_DIGEST_SIZE;
+    digest_size = TPM2_SHA256_DIGEST_SIZE;
   } else if (sizeof(oid_sha384) < hash_length && memcmp(hash, oid_sha384, sizeof(oid_sha384)) == 0) {
     scheme.details.rsassa.hashAlg = TPM2_ALG_SHA384;
-    digestSize = TPM2_SHA384_DIGEST_SIZE;
+    digest_size = TPM2_SHA384_DIGEST_SIZE;
   } else if (sizeof(oid_sha512) < hash_length && memcmp(hash, oid_sha512, sizeof(oid_sha512)) == 0) {
     scheme.details.rsassa.hashAlg = TPM2_ALG_SHA512;
-    digestSize = TPM2_SHA512_DIGEST_SIZE;
+    digest_size = TPM2_SHA512_DIGEST_SIZE;
   } else
     return TPM2_RC_FAILURE;
 
-  TPM2B_DIGEST digest = { .TSS_COMPAT_TMPB(size) = digestSize };
+  TPM2B_DIGEST digest = { .TSS_COMPAT_TMPB(size) = digest_size };
   // Remove OID from hash if provided
-  memcpy(digest.TSS_COMPAT_TMPB(buffer), hash - digestSize + hash_length, hash_length);
+  memcpy(digest.TSS_COMPAT_TMPB(buffer), hash - digest_size + hash_length, digest_size);
 
   return Tss2_Sys_Sign(context, handle, &sessions_data, &digest, &scheme, &validation, signature, &sessions_data_out);
 }
