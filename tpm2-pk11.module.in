@@ -1,0 +1,2 @@
+module: ${P11_KIT_1_P11_MODULE_PATH}/libtpm2-pk11.so
+critical: no

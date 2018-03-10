@@ -3,7 +3,20 @@ project(TPM2_PK11 LANGUAGES C)
 include(${CMAKE_ROOT}/Modules/GNUInstallDirs.cmake)
 
 find_package(PkgConfig REQUIRED)
+function(pkg_check_variable _pkg _name)
+  string(TOUPPER ${_pkg} _pkg_upper)
+  string(TOUPPER ${_name} _name_upper)
+  string(REPLACE "-" "_" _pkg_upper ${_pkg_upper})
+  string(REPLACE "-" "_" _name_upper ${_name_upper})
+  set(_output_name "${_pkg_upper}_${_name_upper}")
+
+  execute_process(COMMAND ${PKG_CONFIG_EXECUTABLE} --variable=${_name} ${_pkg} OUTPUT_VARIABLE _pkg_result OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set("${_output_name}" "${_pkg_result}" CACHE STRING "pkg-config variable ${_name} of ${_pkg}")
+endfunction()
+
 pkg_check_modules(P11_KIT REQUIRED p11-kit-1)
+pkg_check_variable(p11-kit-1 p11_module_configs)
+pkg_check_variable(p11-kit-1 p11_module_path)
 pkg_check_modules(SAPI REQUIRED sapi)
 pkg_check_modules(TCTI_SOCKET tcti-socket)
 pkg_check_modules(TCTI_DEVICE tcti-device)
@@ -13,6 +26,8 @@ pkg_check_modules(LIBTASN1 REQUIRED libtasn1)
 if(NOT TCTI_SOCKET_FOUND AND NOT TCTI_DEVICE_FOUND AND NOT TCTI_TABRMD_FOUND)
   message(FATAL_ERROR "At least one connection type must be enabled")
 endif()
+
+configure_file("tpm2-pk11.module.in" "tpm2-pk11.module")
 
 aux_source_directory(./src SRC_LIST)
 
@@ -34,4 +49,5 @@ if (SAPI_VERSION VERSION_LESS "2.0")
   target_compile_definitions(tpm2-pk11 PUBLIC TSS_COMPAT=1)
 endif()
 
-install(TARGETS tpm2-pk11 DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS tpm2-pk11 DESTINATION ${P11_KIT_1_P11_MODULE_PATH})
+install(FILES ${CMAKE_BUILD_DIRECTORY}/tpm2-pk11.module DESTINATION ${P11_KIT_1_P11_MODULE_CONFIGS})
