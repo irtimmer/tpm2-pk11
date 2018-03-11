@@ -30,7 +30,7 @@ typedef struct object_list_t {
 } ObjectList, *pObjectList;
 
 pObject object_get(pObjectList list, int id);
-void object_add(pObjectList list, pObject object);
+void object_add(pObjectList* list, pObject object);
 void object_free(pObjectList list);
 
 pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config);

@@ -51,15 +51,21 @@ pObject object_get(pObjectList list, int id) {
   return NULL;
 }
 
-void object_add(pObjectList list, pObject object) {
-  if (list->object == NULL)
-    list->object = object;
-  else {
-    pObjectList next = list->next;
-    list->next = malloc(sizeof(ObjectList));
-    list->next->object = object;
-    list->next->next = next;
+void object_add(pObjectList* list, pObject object) {
+  pObjectList entry = malloc(sizeof(ObjectList));
+  if (!entry) {
+    if (object->userdata != NULL)
+      free(object->userdata);
+
+    free(object->entries);
+    free(object);
+
+    return;
   }
+
+  entry->object = object;
+  entry->next = *list;
+  *list = entry;
 }
 
 void object_free(pObjectList list) {
@@ -79,12 +85,7 @@ void object_free(pObjectList list) {
 }
 
 pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
-  pObjectList list = malloc(sizeof(ObjectList));
-  list->object = NULL;
-  list->next = NULL;
-
-  if (list == NULL)
-    goto error;
+  pObjectList list = NULL;
   
   TPMS_CAPABILITY_DATA persistent;
   TPM2_RC rc = tpm_info(ctx, TPM2_HT_PERSISTENT, &persistent);
@@ -153,7 +154,7 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
     object->entries[1] = (AttrIndexEntry) attr_index_entry(&userdata->key, KEY_INDEX);
     object->entries[2] = (AttrIndexEntry) attr_index_entry(&userdata->public_key, PUBLIC_KEY_INDEX);
     object->entries[3] = (AttrIndexEntry) attr_index_entry(&userdata->modulus, MODULUS_INDEX);
-    object_add(list, object);
+    object_add(&list, object);
     pObject public_object = object;
 
     object = malloc(sizeof(Object));
@@ -167,7 +168,7 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
     object->entries[0] = (AttrIndexEntry) attr_index_entry(&userdata->private_object, OBJECT_INDEX);
     object->entries[1] = (AttrIndexEntry) attr_index_entry(&userdata->key, KEY_INDEX);
     object->entries[2] = (AttrIndexEntry) attr_index_entry(&userdata->modulus, MODULUS_INDEX);
-    object_add(list, object);
+    object_add(&list, object);
 
     public_object->opposite = object;
     object->opposite = public_object;
@@ -181,7 +182,7 @@ pObjectList object_load(TSS2_SYS_CONTEXT *ctx, struct config *config) {
       for (int i = 0; i < results.gl_pathc; i++) {
         pObject object = certificate_read(results.gl_pathv[i]);
         if (object)
-          object_add(list, object);
+          object_add(&list, object);
       }
     }
   }
