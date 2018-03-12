@@ -23,9 +23,6 @@
 
 #include <sapi/tpm20.h>
 
-#ifdef TCTI_SOCKET_ENABLED
-#include <tcti/tcti_socket.h>
-#endif // TCTI_SOCKET_ENABLED
 #ifdef TCTI_DEVICE_ENABLED
 #include <tcti/tcti_device.h>
 #endif // TCTI_DEVICE_ENABLED
@@ -35,7 +32,6 @@
 
 #ifndef TSS_COMPAT
 
-typedef const char TSS_COMPAT_TCTI_SOCKET_CONF[256];
 typedef char* TSS_COMPAT_TCTI_DEVICE_CONF;
 
 #define TSS_COMPAT_AUTH_COMMAND_BEGIN
@@ -46,14 +42,12 @@ typedef char* TSS_COMPAT_TCTI_DEVICE_CONF;
 
 #define TSS_COMPAT_TMPB(x) x
 
-#define TSS_COMPAT_SOCKET_CONF(x, y, z) snprintf("tcp://%s:%d", sizeof(x), y, z)
 #define TSS_COMPAT_DEVICE_CONF(x, y) x = y
 
 #define Tss2_Tcti_Tabrmd_Init(x, y, z) tss2_tcti_tabrmd_init(x, y)
 
 #else /* TSS_COMPAT */
 
-#define Tss2_Tcti_Socket_Init(x, y, z) InitSocketTcti(x, y, &z, 0)
 #define Tss2_Tcti_Device_Init(x, y, z) InitDeviceTcti(x, y, &z)
 #define Tss2_Tcti_Tabrmd_Init(x, y, z) tss2_tcti_tabrmd_init(x, y)
 
@@ -113,10 +107,8 @@ typedef char* TSS_COMPAT_TCTI_DEVICE_CONF;
 
 #define TSS_COMPAT_TMPB(x) t.x
 
-#define TSS_COMPAT_SOCKET_CONF(x, y, z) x = (TCTI_SOCKET_CONF) { .hostname = y, .port = z }
 #define TSS_COMPAT_DEVICE_CONF(x, y) x = (TCTI_DEVICE_CONF) { .device_path = y }
 
-typedef TCTI_SOCKET_CONF TSS_COMPAT_TCTI_SOCKET_CONF;
 typedef TCTI_DEVICE_CONF TSS_COMPAT_TCTI_DEVICE_CONF;
 
 #endif /* TSS_COMPAT */

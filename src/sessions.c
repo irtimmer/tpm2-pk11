@@ -1,6 +1,6 @@
 /*
  * This file is part of tpm2-pk11.
- * Copyright (C) 2017 Iwan Timmer
+ * Copyright (C) 2017, 2018 Iwan Timmer
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,6 +21,13 @@
 
 #include <stdlib.h>
 
+#ifdef TCTI_SOCKET_ENABLED
+#include <tcti/tcti_socket.h>
+#endif // TCTI_SOCKET_ENABLED
+#ifdef TCTI_MSSIM_ENABLED
+#include <tcti/tcti_mssim.h>
+#endif // TCTI_MSSIM_ENABLED
+
 #define DEFAULT_DEVICE "/dev/tpm0"
 #define DEFAULT_HOSTNAME "127.0.0.1"
 #define DEFAULT_PORT 2323
@@ -34,9 +41,6 @@ int session_init(struct session* session, struct config *config) {
   TSS2_TCTI_CONTEXT *tcti_ctx = NULL;
   TSS2_RC rc;
 
-#ifdef TCTI_SOCKET_ENABLED
-  TSS_COMPAT_TCTI_SOCKET_CONF socket_conf;
-#endif // TCTI_SOCKET_ENABLED
 #ifdef TCTI_DEVICE_ENABLED
   TSS_COMPAT_TCTI_DEVICE_CONF device_conf;
 #endif // TCTI_DEVICE_ENABLED
@@ -44,7 +48,12 @@ int session_init(struct session* session, struct config *config) {
   switch(config->type) {
 #ifdef TCTI_SOCKET_ENABLED
     case TPM_TYPE_SOCKET:
-      rc = Tss2_Tcti_Socket_Init(NULL, &size, socket_conf);
+      rc = InitSocketTcti(NULL, &size, NULL, 0);
+      break;
+#endif // TCTI_SOCKET_ENABLED
+#ifdef TCTI_MSSIM_ENABLED
+    case TPM_TYPE_SOCKET:
+      rc = Tss2_Tcti_Mssim_Init(NULL, &size, NULL);
       break;
 #endif // TCTI_SOCKET_ENABLED
 #ifdef TCTI_DEVICE_ENABLED
@@ -69,13 +78,26 @@ int session_init(struct session* session, struct config *config) {
   if (tcti_ctx == NULL)
     goto cleanup;
 
+#ifdef TCTI_SOCKET_ENABLED
+  TCTI_SOCKET_CONF socket_conf;
+#endif // TCTI_SOCKET_ENABLED
+#ifdef TCTI_MSSIM_ENABLED
+  const char tcti_uri[256];
+#endif // TCTI_MSSIM_ENABLED
+
   switch(config->type) {
 #ifdef TCTI_SOCKET_ENABLED
     case TPM_TYPE_SOCKET:
-      TSS_COMPAT_SOCKET_CONF(socket_conf, config->hostname != NULL ? config->hostname : DEFAULT_HOSTNAME, config->port > 0 ? config->port : DEFAULT_PORT);
-      rc = Tss2_Tcti_Socket_Init(tcti_ctx, &size, socket_conf);
+      socket_conf = (TCTI_SOCKET_CONF) { .hostname = config->hostname != NULL ? config->hostname : DEFAULT_HOSTNAME, .port = config->port > 0 ? config->port : DEFAULT_PORT };
+      rc = InitSocketTcti(tcti_ctx, &size, &socket_conf, 0);
       break;
 #endif // TCTI_SOCKET_ENABLED
+#ifdef TCTI_MSSIM_ENABLED
+    case TPM_TYPE_SOCKET:
+      snprintf("tcp://%s:%d", sizeof(tcti_uri), config->hostname != NULL ? config->hostname : DEFAULT_HOSTNAME, config->port > 0 ? config->port : DEFAULT_PORT);
+      rc = Tss2_Tcti_Mssim_Init(tcti_ctx, &size, (const char*) &tcti_uri);
+      break;
+#endif // TCTI_MSSIM_ENABLED
 #ifdef TCTI_DEVICE_ENABLED
     case TPM_TYPE_DEVICE: {
       TSS_COMPAT_DEVICE_CONF(device_conf, config->device != NULL ? config->device : DEFAULT_DEVICE);
