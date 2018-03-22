@@ -51,7 +51,7 @@ install:
   - sudo mkdir -p /var/lib/tpm
   - sudo groupadd tss && sudo useradd -M -d /var/lib/tpm -s /bin/false -g tss tss
   - sudo pkill -HUP dbus-daemon
-  - sudo -u tss tpm2-abrmd --tcti=libtcti-$TCTI.so &
+  - sudo -u tss tpm2-abrmd --tcti=$TCTI &
     # openssl 1.0.2g - needed for tpm2-tools
   - wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.0.0_1.0.2g-1ubuntu4.10_amd64.deb
   - wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl-dev_1.0.2g-1ubuntu4.10_amd64.deb
