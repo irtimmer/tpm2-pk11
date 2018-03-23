@@ -25,6 +25,8 @@
 #include "pk11.h"
 
 #include <stdio.h>
+#include <stdlib.h> // using malloc(), calloc(), free()
+#include <string.h> // using memset()
 #include <endian.h>
 #include <limits.h>
 #ifndef PATH_MAX

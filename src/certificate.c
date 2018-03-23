@@ -25,6 +25,7 @@
 #include "utils.h"
 
 #include <stdio.h>
+#include <stdlib.h> // using malloc(), calloc(), free(), getenv()
 #include <string.h>
 
 #include <libtasn1.h>

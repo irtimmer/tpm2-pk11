@@ -29,6 +29,7 @@
 #include <sys/mman.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h> // using malloc(), free(), getenv()
 #include <endian.h>
 
 #define SLOT_ID 0x1234
