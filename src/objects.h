@@ -22,7 +22,7 @@
 #include "config.h"
 #include "object.h"
 
-#include <sapi/tpm20.h>
+#include "tpm20_compat.h"
 
 typedef struct object_list_t {
   pObject object;
