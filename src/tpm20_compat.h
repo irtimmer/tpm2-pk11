@@ -21,16 +21,35 @@
 
 #include <stdio.h>
 
+#ifndef TSS_COMPAT
+#include <tss2/tss2_sys.h>
+#include <tss2/tss2_tcti.h>
+#include <tss2/tss2_tcti_device.h>
+#ifdef TCTI_MSSIM_ENABLED
+#include <tss2/tss2_tcti_mssim.h>
+#endif /* TCTI_SOCKET_ENABLED */
+#ifdef TCTI_MSSIM_ENABLED
+#include <tcti/tss2-tcti-tabrmd.h>
+#endif /* TCTI_TABRMD_ENABLED */
+#else /* TSS_COMPAT */
 #include <sapi/tpm20.h>
-
 #ifdef TCTI_DEVICE_ENABLED
 #include <tcti/tcti_device.h>
-#endif // TCTI_DEVICE_ENABLED
+#endif /* TCTI_DEVICE_ENABLED */
+#ifdef TCTI_SOCKET_ENABLED
+#include <tcti/tcti_socket.h>
+#endif /* TCTI_SOCKET_ENABLED */
 #ifdef TCTI_TABRMD_ENABLED
 #include <tcti/tcti-tabrmd.h>
-#endif // TCTI_TABRMD_ENABLED
+#endif /* TCTI_TABRMD_ENABLED */
+#endif /* TSS_COMPAT */
 
 #ifndef TSS_COMPAT
+
+#define TSSWG_INTEROP 1
+#define TSS_SAPI_FIRST_FAMILY 2
+#define TSS_SAPI_FIRST_LEVEL 1
+#define TSS_SAPI_FIRST_VERSION 108
 
 typedef char* TSS_COMPAT_TCTI_DEVICE_CONF;
 
