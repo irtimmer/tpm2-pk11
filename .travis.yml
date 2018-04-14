@@ -27,9 +27,9 @@ addons:
 
 install:
     # build tpm2 simulator - needed for testing
-  - wget https://downloads.sourceforge.net/project/ibmswtpm2/ibmtpm974.tar.gz
-  - sha256sum ibmtpm974.tar.gz | grep -q 8e45d86129a0adb95fee4cee51f4b1e5b2d81ed3e55af875df53f98f39eb7ad7
-  - mkdir ibmtpm974 && pushd ibmtpm974 && tar axf ../ibmtpm974.tar.gz && pushd ./src && make
+  - wget https://downloads.sourceforge.net/project/ibmswtpm2/ibmtpm1119.tar.gz
+  - sha256sum ibmtpm1119.tar.gz | grep -q b9eef79904e276aeaed2a6b9e4021442ef4d7dfae4adde2473bef1a6a4cd10fb
+  - mkdir ibmtpm1119 && pushd ibmtpm1119 && tar axf ../ibmtpm1119.tar.gz && pushd ./src && make
   - ./tpm_server &
   - popd && popd
     # build tpm2-tss
