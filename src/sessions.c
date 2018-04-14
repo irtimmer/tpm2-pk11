@@ -24,16 +24,11 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "tpm20_compat.h"
 #include "sessions.h"
 
 #include <stdlib.h>
 
-#ifdef TCTI_SOCKET_ENABLED
-#include <tcti/tcti_socket.h>
-#endif // TCTI_SOCKET_ENABLED
-#ifdef TCTI_MSSIM_ENABLED
-#include <tcti/tcti_mssim.h>
-#endif // TCTI_MSSIM_ENABLED
 
 #define DEFAULT_DEVICE "/dev/tpm0"
 #define DEFAULT_HOSTNAME "127.0.0.1"
