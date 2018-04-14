@@ -70,8 +70,6 @@ typedef char* TSS_COMPAT_TCTI_DEVICE_CONF;
 
 #define TSS_COMPAT_DEVICE_CONF(x, y) x = y
 
-#define Tss2_Tcti_Tabrmd_Init(x, y, z) tss2_tcti_tabrmd_init(x, y)
-
 #else /* TSS_COMPAT */
 
 #define Tss2_Tcti_Device_Init(x, y, z) InitDeviceTcti(x, y, &z)
