@@ -32,6 +32,8 @@
 #include "pk11.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <endian.h>
 #include <limits.h>
 #ifndef PATH_MAX
