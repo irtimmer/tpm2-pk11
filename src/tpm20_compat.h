@@ -28,14 +28,25 @@
 
 #include <stdio.h>
 
-#include <sapi/tpm20.h>
+#ifndef TSS_COMPAT
+#  include <tss2/tss2_sys.h>
+#  include <tss2/tss2_tcti.h>
+#  include <tss2/tss2_tcti_device.h>
+#  include <tss2/tss2_tcti_mssim.h>
+#  ifdef TCTI_TABRMD_ENABLED
+#    include <tcti/tss2-tcti-tabrmd.h>
+#  endif /* TCTI_TABRMD_ENABLED */
+#else /* TSS_COMPAT */
+#  include <sapi/tpm20.h>
+#  include <tcti/tcti_device.h>
+#  include <tcti/tcti_socket.h>
+#  ifdef TCTI_TABRMD_ENABLED
+#    include <tcti/tcti-tabrmd.h>
+#  endif /* TCTI_TABRMD_ENABLED */
+#endif /* TSS_COMPAT */
 
-#ifdef TCTI_DEVICE_ENABLED
-#include <tcti/tcti_device.h>
-#endif // TCTI_DEVICE_ENABLED
-#ifdef TCTI_TABRMD_ENABLED
-#include <tcti/tcti-tabrmd.h>
-#endif // TCTI_TABRMD_ENABLED
+/** Compatible TSS2_ABI_VERSION guessing-out method */
+const TSS2_ABI_VERSION guess_tss2_abi_version(TSS2_ABI_VERSION *answer);
 
 #ifndef TSS_COMPAT
 

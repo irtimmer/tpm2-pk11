@@ -24,16 +24,11 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "tpm20_compat.h"
 #include "sessions.h"
 
 #include <stdlib.h>
 
-#ifdef TCTI_SOCKET_ENABLED
-#include <tcti/tcti_socket.h>
-#endif // TCTI_SOCKET_ENABLED
-#ifdef TCTI_MSSIM_ENABLED
-#include <tcti/tcti_mssim.h>
-#endif // TCTI_MSSIM_ENABLED
 
 #define DEFAULT_DEVICE "/dev/tpm0"
 #define DEFAULT_HOSTNAME "127.0.0.1"
@@ -130,12 +125,8 @@ int session_init(struct session* session, struct config *config) {
   if (session->context == NULL)
     goto cleanup;
 
-  TSS2_ABI_VERSION abi_version = {
-    .tssCreator = TSSWG_INTEROP,
-    .tssFamily = TSS_SAPI_FIRST_FAMILY,
-    .tssLevel = TSS_SAPI_FIRST_LEVEL,
-    .tssVersion = TSS_SAPI_FIRST_VERSION,
-  };
+  TSS2_ABI_VERSION abi_version;
+  guess_tss2_abi_version(&abi_version);
   rc = Tss2_Sys_Initialize(session->context, size, tcti_ctx, &abi_version);
 
   session->objects = object_load(session->context, config);
