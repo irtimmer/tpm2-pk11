@@ -23,7 +23,3 @@ For more information about howto setup keys, certificates and applications see t
 1. Fork us
 2. Write code
 3. Send Pull Requests
-
-## Copyright and license
-
-Copyright 2017, 2018 Iwan Timmer. Distributed under the GNU LGPL v2.1. For full terms see the LICENSE file
