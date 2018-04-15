@@ -28,6 +28,49 @@ if(NOT TCTI_SOCKET_FOUND AND NOT TCTI_MSSIM_FOUND AND NOT TCTI_DEVICE_FOUND AND 
   message(FATAL_ERROR "At least one connection type must be enabled")
 endif()
 
+find_library(SAPI_LIBRARIES
+  NAMES sapi tss2-sys
+  HINTS ${SAPI_LIBDIR} ${SAPI_LIBRARY_DIRS}
+)
+
+if(TCTI_SOCKET_FOUND)
+  find_library(TCTI_SOCKET_LIBRARIES
+    NAMES tcti-socket
+    HINTS ${TCTI_SOCKET_LIBDIR} ${TCTI_SOCKET_LIBRARY_DIRS}
+  )
+endif()
+
+if(TCTI_MSSIM_FOUND)
+  find_library(TCTI_MSSIM_LIBRARIES
+    NAMES tss2-tcti-mssim
+    HINTS ${TCTI_MSSIM_LIBDIR} ${TCTI_MSSIM_LIBRARY_DIRS}
+  )
+endif()
+
+if(TCTI_DEVICE_FOUND)
+  find_library(TCTI_DEVICE_LIBRARIES
+    NAMES tcti-device tss2-tcti-device
+    HINTS ${TCTI_DEVICE_LIBDIR} ${TCTI_DEVICE_LIBRARY_DIRS}
+  )
+endif()
+
+if(TCTI_TABRMD_FOUND)
+  find_library(TCTI_TABRMD_LIBRARIES
+    NAMES tcti-tabrmd tss2-tcti-tabrmd
+    HINTS ${TCTI_TABRMD_LIBDIR} ${TCTI_TABRMD_LIBRARY_DIRS}
+  )
+endif()
+
+find_library(P11_KIT_LIBRARIES
+  NAMES p11-kit
+  HINTS ${P11_KIT_LIBDIR} ${P11_KIT_LIBRARY_DIRS}
+)
+
+find_library(LIBTASN1_LIBRARIES
+  NAMES tasn1
+  HINTS ${LIBTASN1_LIBDIR} ${LIBTASN1_LIBRARY_DIRS}
+)
+
 configure_file("tpm2-pk11.module.in" "tpm2-pk11.module")
 
 aux_source_directory(./src SRC_LIST)
