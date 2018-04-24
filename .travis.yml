@@ -53,12 +53,12 @@ install:
   - sudo pkill -HUP dbus-daemon
   - sudo -u tss tpm2-abrmd --tcti=$TCTI &
     # openssl 1.0.2g - needed for tpm2-tools
-  - wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.0.0_1.0.2g-1ubuntu4.11_amd64.deb
-  - wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl-dev_1.0.2g-1ubuntu4.11_amd64.deb
-  - sha256sum libssl1.0.0_1.0.2g-1ubuntu4.11_amd64.deb | grep -q aa224192700e21fb7375da10cc2ff6889e6c463e57bf9e267640ab79f8023b4b
-  - sha256sum libssl-dev_1.0.2g-1ubuntu4.11_amd64.deb | grep -q 94f4ae1d7034fa857b6d1b229ebd77a41c0089e3668f84cc39cada7182a5c5dc
-  - sudo dpkg -i libssl1.0.0_1.0.2g-1ubuntu4.11_amd64.deb
-  - sudo dpkg -i libssl-dev_1.0.2g-1ubuntu4.11_amd64.deb
+  - wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.0.0_1.0.2g-1ubuntu4.12_amd64.deb
+  - wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl-dev_1.0.2g-1ubuntu4.12_amd64.deb
+  - sha256sum libssl1.0.0_*_amd64.deb | grep -q ba6e1484e05b7949bbe6c2fdf8ac0455191f412f707674623ffe94105fe2d15b
+  - sha256sum libssl-dev_*_amd64.deb | grep -q e94c13bde8fcf588940ddcccc63b5aa7271f1a3ff51526d3be0a77729190e879
+  - sudo dpkg -i libssl1.0.0_*_amd64.deb
+  - sudo dpkg -i libssl-dev_*_amd64.deb
     # build tpm2-tools - needed for testing
   - git clone https://github.com/tpm2-software/tpm2-tools.git --branch $TPM2_TOOLS_BRANCH
   - pushd tpm2-tools
