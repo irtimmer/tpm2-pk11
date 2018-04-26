@@ -37,7 +37,7 @@
 unsigned int open_sessions;
 
 int session_init(struct session* session, struct config *config) {
-  session->context = NULL;
+  memset(session, 0, sizeof(struct session));
 
   size_t size = 0;
   TSS2_TCTI_CONTEXT *tcti_ctx = NULL;
