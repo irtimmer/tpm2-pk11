@@ -28,6 +28,7 @@
 #include "sessions.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 
 #define DEFAULT_DEVICE "/dev/tpm0"
