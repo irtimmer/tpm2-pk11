@@ -18,6 +18,20 @@ For more information about howto setup keys, certificates and applications see t
 - Firefox (Private key of Client certificate in TPM)
 - GnuPG using [gnupg-pkcs11-scd](https://github.com/alonbl/gnupg-pkcs11-scd) (PGP key in TPM)
 
+## Build & Install
+
+CMake and Make libraries are needed for (pre-)compilation and building.
+They can be installed with the following command:
+
+`apt-get install cmake make`
+
+1. Check out the Git repository `git clone https://github.com/irtimmer/tpm2-pk11.git`
+2. Change into project directiory `cd tpm2-pk11/`
+3. Create build directory `mkdir build`
+4. Change into build directory `cd build/`
+5. Execute CMake `cmake ..`
+6. Execute Make `make`
+
 ## Contribute
 
 1. Fork us
