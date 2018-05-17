@@ -39,6 +39,7 @@ struct session {
   CK_ATTRIBUTE_PTR filters;
   size_t num_filters;
   pObject current_object;
+  char *password;
 };
 
 extern unsigned int open_sessions;

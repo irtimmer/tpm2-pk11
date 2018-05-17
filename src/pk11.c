@@ -136,7 +136,7 @@ CK_RV C_GetTokenInfo(CK_SLOT_ID id, CK_TOKEN_INFO_PTR info) {
   strncpy_pad(info->serialNumber, sizeof(info->serialNumber), TPM2_PK11_SERIAL, sizeof(info->serialNumber));
   strncpy_pad(info->utcTime, sizeof(info->utcTime), "", sizeof(info->utcTime));
 
-  info->flags = CKF_TOKEN_INITIALIZED | CKF_WRITE_PROTECTED;
+  info->flags = CKF_TOKEN_INITIALIZED | CKF_WRITE_PROTECTED | CKF_LOGIN_REQUIRED;
   TPMS_TAGGED_PROPERTY* max_sessions = tpm_info_get(props.tpmProperty, props.count, TPM2_PT_ACTIVE_SESSIONS_MAX);
   info->ulMaxSessionCount = max_sessions ? max_sessions->value : CK_EFFECTIVELY_INFINITE;
   info->ulSessionCount = open_sessions;
@@ -260,11 +260,11 @@ CK_RV C_Sign(CK_SESSION_HANDLE session_handle, CK_BYTE_PTR data, CK_ULONG data_l
     TPM2B_PUBLIC_KEY_RSA message = { .TSS_COMPAT_TMPB(size) = TPM2_MAX_RSA_KEY_BYTES };
     pObject object = session->current_object->opposite;
     CK_ULONG_PTR key_size = (CK_ULONG_PTR) attr_get(object, CKA_MODULUS_BITS, NULL);
-    ret = tpm_sign_encrypt(session->context, session->key_handle, *key_size / 8, data, data_len, &message);
+    ret = tpm_sign_encrypt(session->context, session->key_handle, *key_size / 8, data, data_len, &message, session->password);
     retmem(signature, signature_len, message.TSS_COMPAT_TMPB(buffer), message.TSS_COMPAT_TMPB(size));
   } else {
     TPMT_SIGNATURE sign = {0};
-    ret = tpm_sign(session->context, session->key_handle, data, data_len, &sign);
+    ret = tpm_sign(session->context, session->key_handle, data, data_len, &sign, session->password);
     retmem(signature, signature_len, sign.signature.rsassa.sig.TSS_COMPAT_TMPB(buffer), sign.signature.rsassa.sig.TSS_COMPAT_TMPB(size));
   }
 
@@ -282,7 +282,7 @@ CK_RV C_Decrypt(CK_SESSION_HANDLE session_handle, CK_BYTE_PTR enc_data, CK_ULONG
   print_log(VERBOSE, "C_Decrypt: session = %x, len = %d", session_handle, enc_data_len);
   TPM2B_PUBLIC_KEY_RSA message = { .TSS_COMPAT_TMPB(size) = TPM2_MAX_RSA_KEY_BYTES };
   struct session* session = get_session(session_handle);
-  TPM2_RC ret = tpm_decrypt(session->context, session->key_handle, enc_data, enc_data_len, &message);
+  TPM2_RC ret = tpm_decrypt(session->context, session->key_handle, enc_data, enc_data_len, &message, session->password);
   retmem(data, data_len, message.TSS_COMPAT_TMPB(buffer), message.TSS_COMPAT_TMPB(size));
 
   return ret == TPM2_RC_SUCCESS ? CKR_OK : CKR_GENERAL_ERROR;
@@ -362,7 +362,14 @@ CK_RV C_SetOperationState(CK_SESSION_HANDLE session_handle, CK_BYTE_PTR state, C
 
 CK_RV C_Login(CK_SESSION_HANDLE session_handle, CK_USER_TYPE userType, CK_UTF8CHAR_PTR pin, CK_ULONG pin_len) {
   print_log(VERBOSE, "C_Login: session = %x", session_handle);
-  return CKR_FUNCTION_NOT_SUPPORTED;
+
+  if (userType != CKU_USER)
+    return CKR_USER_TYPE_INVALID;
+
+  struct session* session = get_session(session_handle);
+  session->password = strndup(pin, pin_len);
+
+  return CKR_OK;
 }
 
 CK_RV C_Logout(CK_SESSION_HANDLE session_handle) {
