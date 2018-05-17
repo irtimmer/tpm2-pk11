@@ -128,7 +128,7 @@ CK_RV C_GetTokenInfo(CK_SLOT_ID id, CK_TOKEN_INFO_PTR info) {
     return CKR_DEVICE_ERROR;
 
   TPML_TAGGED_TPM_PROPERTY props = fixed.data.tpmProperties;
-  strncpy_pad(info->label, sizeof(info->label), TPM2_PK11_EMPTY, sizeof(info->label));
+  strncpy_pad(info->label, sizeof(info->label), TPM2_PK11_LABEL, sizeof(info->label));
   TPMS_TAGGED_PROPERTY* manufacturer = tpm_info_get(props.tpmProperty, props.count, TPM2_PT_MANUFACTURER);
   UINT32 manufacturer_val = manufacturer ? htobe32(manufacturer->value) : 0;
   strncpy_pad(info->manufacturerID, sizeof(info->manufacturerID), manufacturer ? (char*) &manufacturer_val : TPM2_PK11_MANUFACTURER, manufacturer ? 4 : sizeof(info->manufacturerID));
