@@ -34,6 +34,12 @@ const unsigned char oid_sha256[] = {0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x
 const unsigned char oid_sha384[] = {0x30, 0x41, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86,0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x02, 0x05,0x00, 0x04, 0x30};
 const unsigned char oid_sha512[] = {0x30, 0x51, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86,0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x03, 0x05,0x00, 0x04, 0x40};
 
+static void tpm_set_session_password(TSS2L_SYS_AUTH_COMMAND *sessions_data, char *password) {
+  TPMS_AUTH_COMMAND *cmd = sessions_data->cmdAuths[0];
+  strncat(cmd->hmac.t.buffer, password, sizeof(TPMU_HA));
+  cmd->hmac.t.size = strlen(password) >= sizeof(TPMU_HA) ? 0 : strlen(password);
+}
+
 TPM2_RC tpm_readpublic(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, TPM2B_PUBLIC *public, TPM2B_NAME *name) {
   TSS_COMPAT_AUTH_RESPONSE_BEGIN;
   TSS2L_SYS_AUTH_RESPONSE sessions_data_out = TSS_COMPAT_AUTH_RESPONSE_VALUE;
@@ -43,9 +49,11 @@ TPM2_RC tpm_readpublic(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, TPM2B_P
   return Tss2_Sys_ReadPublic(context, handle, 0, public, name, &qualified_name, &sessions_data_out);
 }
 
-TPM2_RC tpm_sign(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned char *hash, unsigned long hash_length, TPMT_SIGNATURE *signature) {
+TPM2_RC tpm_sign(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned char *hash, unsigned long hash_length, TPMT_SIGNATURE *signature, char *password) {
   TSS_COMPAT_AUTH_COMMAND_BEGIN(TPM2_RS_PW);
   TSS2L_SYS_AUTH_COMMAND sessions_data = TSS_COMPAT_AUTH_COMMAND_VALUE(TPM2_RS_PW);
+  if (password)
+    tpm_set_session_password(&sessions_data, password);
 
   TSS_COMPAT_AUTH_RESPONSE_BEGIN;
   TSS2L_SYS_AUTH_RESPONSE sessions_data_out = TSS_COMPAT_AUTH_RESPONSE_VALUE;
@@ -80,9 +88,11 @@ TPM2_RC tpm_sign(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned char
   return Tss2_Sys_Sign(context, handle, &sessions_data, &digest, &scheme, &validation, signature, &sessions_data_out);
 }
 
-TPM2_RC tpm_decrypt(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned char *cipher_text, unsigned long cipher_length, TPM2B_PUBLIC_KEY_RSA *message) {
+TPM2_RC tpm_decrypt(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned char *cipher_text, unsigned long cipher_length, TPM2B_PUBLIC_KEY_RSA *message, char *password) {
   TSS_COMPAT_AUTH_COMMAND_BEGIN(TPM2_RS_PW);
   TSS2L_SYS_AUTH_COMMAND sessions_data = TSS_COMPAT_AUTH_COMMAND_VALUE(TPM2_RS_PW);
+  if (password)
+    tpm_set_session_password(&sessions_data, password);
 
   TSS_COMPAT_AUTH_RESPONSE_BEGIN;
   TSS2L_SYS_AUTH_RESPONSE sessions_data_out = TSS_COMPAT_AUTH_RESPONSE_VALUE;
@@ -98,9 +108,11 @@ TPM2_RC tpm_decrypt(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, unsigned c
   return Tss2_Sys_RSA_Decrypt(context, handle, &sessions_data, &cipher, &scheme, &label, message, &sessions_data_out);
 }
 
-TPM2_RC tpm_sign_encrypt(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, size_t key_size, unsigned char *hash, size_t hash_length, TPM2B_PUBLIC_KEY_RSA *signature) {
+TPM2_RC tpm_sign_encrypt(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, size_t key_size, unsigned char *hash, size_t hash_length, TPM2B_PUBLIC_KEY_RSA *signature, char *password) {
   TSS_COMPAT_AUTH_COMMAND_BEGIN(TPM2_RS_PW);
   TSS2L_SYS_AUTH_COMMAND sessions_data = TSS_COMPAT_AUTH_COMMAND_VALUE(TPM2_RS_PW);
+  if (password)
+    tpm_set_session_password(&sessions_data, password);
 
   TPM2B_PUBLIC_KEY_RSA message = { .TSS_COMPAT_TMPB(size) = key_size };
   unsigned char *p = message.TSS_COMPAT_TMPB(buffer);
