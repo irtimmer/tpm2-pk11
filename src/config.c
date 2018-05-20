@@ -64,6 +64,8 @@ int config_load(char* filename, struct config *config) {
         config->port = atoi(value);
       else if (strcmp(key, "sign-using-encrypt") == 0)
         config->sign_using_encrypt = strcasecmp(value, "true") == 0;
+      else if (strcmp(key, "login-required") == 0)
+        config->login_required = strcasecmp(value, "true") == 0;
       else if (strcmp(key, "log-level") == 0)
         config->log_level = atoi(value);
       else if (strcmp(key, "log") == 0) {

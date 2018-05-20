@@ -10,3 +10,7 @@ device /dev/tpm0
 # For example SSH use SHA512 which isn't supported by all TPM's
 # Enabling this option requires key's to be encryption keys instead of signing only keys
 sign-using-encrypt true
+# Set login_required in case keys are protected by a password
+# Notice currently only a single password for all keys is supported
+# Depending on the TPM settings, providing wrong passwords can lead to a lockout
+login-required false

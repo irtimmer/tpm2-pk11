@@ -136,7 +136,10 @@ CK_RV C_GetTokenInfo(CK_SLOT_ID id, CK_TOKEN_INFO_PTR info) {
   strncpy_pad(info->serialNumber, sizeof(info->serialNumber), TPM2_PK11_SERIAL, sizeof(info->serialNumber));
   strncpy_pad(info->utcTime, sizeof(info->utcTime), "", sizeof(info->utcTime));
 
-  info->flags = CKF_TOKEN_INITIALIZED | CKF_WRITE_PROTECTED | CKF_LOGIN_REQUIRED;
+  info->flags = CKF_TOKEN_INITIALIZED | CKF_WRITE_PROTECTED;
+  if (pk11_config.login_required)
+    info->flags |= CKF_LOGIN_REQUIRED;
+
   TPMS_TAGGED_PROPERTY* max_sessions = tpm_info_get(props.tpmProperty, props.count, TPM2_PT_ACTIVE_SESSIONS_MAX);
   info->ulMaxSessionCount = max_sessions ? max_sessions->value : CK_EFFECTIVELY_INFINITE;
   info->ulSessionCount = open_sessions;
@@ -375,6 +378,7 @@ CK_RV C_Login(CK_SESSION_HANDLE session_handle, CK_USER_TYPE userType, CK_UTF8CH
 CK_RV C_Logout(CK_SESSION_HANDLE session_handle) {
   print_log(VERBOSE, "C_Logout: session = %x", session_handle);
 
+  struct session* session = get_session(session_handle);
   if (session->password) {
     free(session->password);
     session->password = NULL;
