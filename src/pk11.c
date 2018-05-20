@@ -374,7 +374,13 @@ CK_RV C_Login(CK_SESSION_HANDLE session_handle, CK_USER_TYPE userType, CK_UTF8CH
 
 CK_RV C_Logout(CK_SESSION_HANDLE session_handle) {
   print_log(VERBOSE, "C_Logout: session = %x", session_handle);
-  return CKR_FUNCTION_NOT_SUPPORTED;
+
+  if (session->password) {
+    free(session->password);
+    session->password = NULL;
+  }
+
+  return CKR_OK;
 }
 
 CK_RV C_CreateObject(CK_SESSION_HANDLE session_handle, CK_ATTRIBUTE_PTR template, CK_ULONG count, CK_OBJECT_HANDLE_PTR object) {

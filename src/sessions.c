@@ -150,6 +150,9 @@ int session_init(struct session* session, struct config *config) {
 }
 
 void session_close(struct session* session) {
+  if (session->password)
+    free(session->password);
+
   object_free(session->objects);
   Tss2_Sys_Finalize(session->context);
   open_sessions--;
