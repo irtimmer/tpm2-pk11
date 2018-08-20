@@ -8,7 +8,7 @@ env:
 
 matrix:
   include:
-    env: TSS_BRANCH=1.x TPM2_TOOLS_BRANCH=3.0.3 TSS_CONFIGURATIONS= TCTI=socket
+    env: TSS_BRANCH=1.x TPM2_TOOLS_BRANCH=3.0.X TSS_CONFIGURATIONS= TCTI=socket
 
 sudo: required
 dist: trusty
@@ -53,10 +53,10 @@ install:
   - sudo pkill -HUP dbus-daemon
   - sudo -u tss tpm2-abrmd --tcti=$TCTI &
     # openssl 1.0.2g - needed for tpm2-tools
-  - wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.0.0_1.0.2g-1ubuntu4.12_amd64.deb
-  - wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl-dev_1.0.2g-1ubuntu4.12_amd64.deb
-  - sha256sum libssl1.0.0_*_amd64.deb | grep -q ba6e1484e05b7949bbe6c2fdf8ac0455191f412f707674623ffe94105fe2d15b
-  - sha256sum libssl-dev_*_amd64.deb | grep -q e94c13bde8fcf588940ddcccc63b5aa7271f1a3ff51526d3be0a77729190e879
+  - wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.0.0_1.0.2g-1ubuntu4.13_amd64.deb
+  - wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl-dev_1.0.2g-1ubuntu4.13_amd64.deb
+  - sha256sum libssl1.0.0_*_amd64.deb | grep -q 22218427bf75a27e4e384d98bcb5286144ff824cc86bf21a82632304ac099195
+  - sha256sum libssl-dev_*_amd64.deb | grep -q c6aadbb7b58700a108ef9d51edbdf9dd7534f70d02943a2e540f2021619602b5
   - sudo dpkg -i libssl1.0.0_*_amd64.deb
   - sudo dpkg -i libssl-dev_*_amd64.deb
     # build tpm2-tools - needed for testing
