@@ -36,8 +36,8 @@ const unsigned char oid_sha512[] = {0x30, 0x51, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x
 
 static void tpm_set_session_password(TSS2L_SYS_AUTH_COMMAND *sessions_data, char *password) {
   TPMS_AUTH_COMMAND *cmd = sessions_data->cmdAuths[0];
-  strncat(cmd->hmac.t.buffer, password, sizeof(TPMU_HA));
-  cmd->hmac.t.size = strlen(password) >= sizeof(TPMU_HA) ? 0 : strlen(password);
+  strncat(cmd->hmac.TSS_COMPAT_TMPB(buffer), password, sizeof(TPMU_HA));
+  cmd->hmac.TSS_COMPAT_TMPB(size) = strlen(password) >= sizeof(TPMU_HA) ? 0 : strlen(password);
 }
 
 TPM2_RC tpm_readpublic(TSS2_SYS_CONTEXT *context, TPMI_DH_OBJECT handle, TPM2B_PUBLIC *public, TPM2B_NAME *name) {
