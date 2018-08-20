@@ -70,6 +70,8 @@ typedef char* TSS_COMPAT_TCTI_DEVICE_CONF;
 
 #define TSS_COMPAT_DEVICE_CONF(x, y) x = y
 
+#define TSS_COMPAT_AUTHS(x) &x->auths[0]
+
 #else /* TSS_COMPAT */
 
 #define Tss2_Tcti_Device_Init(x, y, z) InitDeviceTcti(x, y, &z)
@@ -132,6 +134,8 @@ typedef char* TSS_COMPAT_TCTI_DEVICE_CONF;
 #define TSS_COMPAT_TMPB(x) t.x
 
 #define TSS_COMPAT_DEVICE_CONF(x, y) x = (TCTI_DEVICE_CONF) { .device_path = y }
+
+#define TSS_COMPAT_AUTHS(x) x->cmdAuths[0]
 
 typedef TCTI_DEVICE_CONF TSS_COMPAT_TCTI_DEVICE_CONF;
 
