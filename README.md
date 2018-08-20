@@ -7,6 +7,10 @@ TPM2-PK11 provide a PKCS#11 backend for TPM 2.0 chips.
 This allows you to use your TPM keys in every application which support the PKCS #11 standard.
 For more information about howto setup keys, certificates and applications see the [wiki](https://github.com/irtimmer/tpm2-pk11/wiki).
 
+## Dependencies
+For Ubuntu 18.04 Bionic beaver
+`apt install libsapi-dev libtasn1-6-dev libp11-kit-dev`
+
 ## Features
 
 - Sign and decrypt using private RSA key stored in TPM
