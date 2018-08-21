@@ -62,7 +62,7 @@ install:
     # build tpm2-tools - needed for testing
   - git clone https://github.com/tpm2-software/tpm2-tools.git --branch $TPM2_TOOLS_BRANCH
   - pushd tpm2-tools
-  - ./bootstrap && ./configure --disable-dlclose && make -j$(nproc) && sudo make install
+  - ./bootstrap && TSS2_SYS_CFLAGS='-Wno-missing-field-initializers' ./configure --disable-dlclose && make -j$(nproc) && sudo make install
   - popd
     # setup travis environment for testing.
   - mkdir -p ~/.ssh
