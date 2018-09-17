@@ -14,3 +14,13 @@ sign-using-encrypt true
 # Notice currently only a single password for all keys is supported
 # Depending on the TPM settings, providing wrong passwords can lead to a lockout
 login-required false
+# Enable logging
+# None: 0
+# Error: 1
+# Warning: 2
+# Info: 3
+# Verbose: 4
+# Debug: 5
+log-level 2
+# Set log file location or use stdout/stderr
+log stderr

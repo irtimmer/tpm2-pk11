@@ -25,9 +25,11 @@
  */
 
 #define NONE 0
-#define INFO 1
-#define VERBOSE 2
-#define DEBUG 3
+#define ERROR 1
+#define WARNING 2
+#define INFO 3
+#define VERBOSE 4
+#define DEBUG 5
 
 void log_init(char* filename, int level);
 void print_log(int level, const char* format, ...);
