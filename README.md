@@ -1,7 +1,9 @@
+### Deprecation Notice
+
+This package is no longer maintained. Users are advised to switch to [tpm2-pkcs11](https://github.com/tpm2-software/tpm2-pkcs11) which is developed by the developers of the TPM2 Software Stack.
+
 TPM2-PK11
 ==========
-
-[![Build Status](https://travis-ci.org/irtimmer/tpm2-pk11.svg?branch=master)](https://travis-ci.org/irtimmer/tpm2-pk11)
 
 TPM2-PK11 provide a PKCS#11 backend for TPM 2.0 chips.
 This allows you to use your TPM keys in every application which support the PKCS #11 standard.
