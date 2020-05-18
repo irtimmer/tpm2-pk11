@@ -1,0 +1,6 @@
+CMakeFiles/
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+libtpm2-pk11.so
+tpm2-pk11.module
